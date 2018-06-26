@@ -129,6 +129,7 @@ static void conv_model( float *  gs      , int     ts_length ,
 static char * genv_conv_ref = NULL;    /* AFNI_CONVMODEL_REF */
 static char * genv_prf_stim = NULL;    /* AFNI_MODEL_PRF_STIM_DSET */
 static char * genv_gauss_file = NULL;  /* AFNI_MODEL_PRF_GAUSS_FILE */
+static int    genv_g_stim_index = 0;   /* AFNI_MODEL_PRF_G_STIM_INDEX */
 static int    genv_diter    = -1;      /* debug iteration */
 static int    genv_debug    = 0;       /* AFNI_MODEL_DEBUG */
 
@@ -179,6 +180,7 @@ static int set_env_vars(void)
 
    /* write a Gaussian mask? */
    genv_gauss_file = my_getenv("AFNI_MODEL_PRF_GAUSS_FILE");
+   genv_g_stim_index = (int)AFNI_numenv_def("AFNI_MODEL_PRF_G_STIM_INDEX", 0);
 
    return 0;
 }
@@ -1083,9 +1085,15 @@ static int write_gauss_file(char * fname, float * curve, int nx, int ny,
    for(ind = 0; ind < nx*ny; ind++)
       *mptr++ = *dptr++;
 
-   /* now fill mask slice */
+   /* now fill stim slice, with time index from genv_g_stim_index */
    mptr = DBLK_ARRAY(dout->dblk, 1);
-   bptr = DBLK_ARRAY(g_saset->dblk, 0);
+   if( genv_g_stim_index >= DSET_NVALS(dout) ) {
+      fprintf(stderr, "** bad AFNI_MODEL_PRF_G_STIM_INDEX %d, setting to 0\n",
+              genv_g_stim_index);
+      genv_g_stim_index = 0;
+   }
+
+   bptr = DBLK_ARRAY(g_saset->dblk, genv_g_stim_index);
    for(ind = 0; ind < nx*ny; ind++, bptr++)
       *mptr++ = (float)*bptr;
 
@@ -1423,6 +1431,17 @@ static int model_help(void)
 "         Write a 2-D image with the Gaussian curve, which is helpful\n"
 "         for checking the parameters.  This works best when used via\n"
 "         the get_afni_model_PRF_6 program.\n"
+"\n"
+"      AFNI_MODEL_PRF_G_STIM_INDEX : set index of mask to save with gauss\n"
+"\n"
+"         e.g. setenv AFNI_MODEL_PRF_G_STIM_INDEX 27\n"
+"              default 0\n"
+"\n"
+"         This option is to be used along with AFNI_MODEL_PRF_GAUSS_FILE.\n"
+"         Along with the Gaussian curve, one time point of the\n"
+"         AFNI_MODEL_PRF_STIM_DSET dataset is also saved, to compare grids.\n"
+"         Use this AFNI_MODEL_PRF_G_STIM_INDEX variable to specify the time\n"
+"         index that is saved.\n"
 "\n"
 "----------------------------------------------------------------------\n"
 "   Written for E Silson and C Baker.\n"
