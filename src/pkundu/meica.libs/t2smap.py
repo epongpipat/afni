@@ -65,19 +65,16 @@ def niwrite(data,affine, name , header=None):
 	return outni
 
 def cat2echos(data,Ne):
-	"""
+    """
 	cat2echos(data,Ne)
 
 	Input:
 	data shape is (nx,ny,Ne*nz,nt)
 	"""
-	nx,ny = data.shape[0:2]
-	nz = data.shape[2]/Ne
-	if len(data.shape) >3:
-		nt = data.shape[3]
-	else:
-		nt = 1
-	return np.reshape(data,(nx,ny,nz,Ne,nt),order='F')
+    nx,ny = data.shape[0:2]
+    nz = data.shape[2]/Ne
+    nt = data.shape[3] if len(data.shape) >3 else 1
+    return np.reshape(data,(nx,ny,nz,Ne,nt),order='F')
 
 def uncat2echos(data,Ne):
 	"""
@@ -107,7 +104,7 @@ def makemask(cdat):
 	return mask
 
 def fmask(data,mask):
-	"""
+    """
 	fmask(data,mask)
 
 	Input:
@@ -118,23 +115,21 @@ def fmask(data,mask):
 	out shape is (Nm,...)
 	"""
 
-	s = data.shape
-	sm = mask.shape
+    s = data.shape
+    sm = mask.shape
 
-	N = s[0]*s[1]*s[2]
-	news = []
-	news.append(N)
+    N = s[0]*s[1]*s[2]
+    news = [N]
+    if len(s) >3:
+    	news.extend(s[3:])
 
-	if len(s) >3:
-		news.extend(s[3:])
+    tmp1 = np.reshape(data,news)
+    fdata = tmp1.compress((mask > 0 ).ravel(),axis=0)
 
-	tmp1 = np.reshape(data,news)
-	fdata = tmp1.compress((mask > 0 ).ravel(),axis=0)
+    return fdata.squeeze()
 
-	return fdata.squeeze()
-
-def unmask (data,mask):
-	"""
+def unmask(data,mask):
+    """
 	unmask (data,mask)
 
 	Input:
@@ -143,20 +138,16 @@ def unmask (data,mask):
 	mask has shape (nx,ny,nz)
 
 	"""
-	M = (mask != 0).ravel()
-	Nm = M.sum()
+    M = (mask != 0).ravel()
+    Nm = M.sum()
 
-	nx,ny,nz = mask.shape
+    nx,ny,nz = mask.shape
 
-	if len(data.shape) > 1:
-		nt = data.shape[1]
-	else:
-		nt = 1
+    nt = data.shape[1] if len(data.shape) > 1 else 1
+    out = np.zeros((nx*ny*nz,nt),dtype=data.dtype)
+    out[M,:] = np.reshape(data,(Nm,nt))
 
-	out = np.zeros((nx*ny*nz,nt),dtype=data.dtype)
-	out[M,:] = np.reshape(data,(Nm,nt))
-
-	return np.reshape(out,(nx,ny,nz,nt))
+    return np.reshape(out,(nx,ny,nz,nt))
 
 def t2smap(catd,mask,tes):
 	"""

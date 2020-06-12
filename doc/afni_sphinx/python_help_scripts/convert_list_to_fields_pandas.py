@@ -94,7 +94,7 @@ def parse_lines(LL):
         ltype = "empty"
         this_desc = ""
         x = LL[i]
-        if len(x.strip()) :
+        if len(x.strip()):
             if x[:2] == "++":
                 ltype = "group"
                 y = x[2:].split("::")
@@ -106,10 +106,9 @@ def parse_lines(LL):
 
                 this_rank = int(y[0].strip())
                 this_prog = y[1].strip()
-                
-                if len(y) > 2:
-                    if len(y[2]):
-                        this_desc = y[2].strip()
+
+                if len(y) > 2 and len(y[2]):
+                    this_desc = y[2].strip()
                 if len(this_prog):
                     list_group.append(this_group)
                     list_grank.append(this_grank)
@@ -117,12 +116,10 @@ def parse_lines(LL):
                     list_rank.append(this_rank)
                     list_desc.append(this_desc)
 
-        #print "%10s  %5d  %s   %s" % (ltype, len(x.strip()), x, this_desc)
+            #print "%10s  %5d  %s   %s" % (ltype, len(x.strip()), x, this_desc)
 
     lll = [list_group, list_grank, list_prog, list_rank, list_desc]
-    mmm = map(list, zip(*lll))
-
-    return mmm
+    return map(list, zip(*lll))
 
 
 # =================================================================

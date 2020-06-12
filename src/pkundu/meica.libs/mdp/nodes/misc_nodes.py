@@ -394,7 +394,7 @@ class TimeDelaySlidingWindowNode(TimeDelayNode):
     def _execute(self, x):
         assert x.shape[0] == 1
 
-        if self.sliding_wnd == None:
+        if self.sliding_wnd is None:
             self._init_sliding_window()
 
         gap = self.gap
@@ -793,13 +793,13 @@ class AdaptiveCutoffNode(HistogramNode):
         if self.lower_cutoff_fraction or self.upper_cutoff_fraction:
             sorted_data = self.data_hist.copy()
             sorted_data.sort(axis=0)
-            if self.lower_cutoff_fraction:
-                index = self.lower_cutoff_fraction * len(sorted_data)
-                self.lower_bounds = sorted_data[index]
-            if self.upper_cutoff_fraction:
-                index = (len(sorted_data) -
-                         self.upper_cutoff_fraction * len(sorted_data))
-                self.upper_bounds = sorted_data[index]
+        if self.lower_cutoff_fraction:
+            index = self.lower_cutoff_fraction * len(sorted_data)
+            self.lower_bounds = sorted_data[index]
+        if self.upper_cutoff_fraction:
+            index = (len(sorted_data) -
+                     self.upper_cutoff_fraction * len(sorted_data))
+            self.upper_bounds = sorted_data[index]
         super(AdaptiveCutoffNode, self)._stop_training()
 
     def _execute(self, x):

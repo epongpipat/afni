@@ -84,11 +84,7 @@ def Convert_StrList_to_NumArr(LL):
 def Invert_BadInd_List(LL, NMAX=-1):
 
     # [PT: June 26, 2018] fix to a silly error when LL was empty
-    if len(LL):
-        Lmax = max(LL)
-    else:
-        Lmax = 0
-    
+    Lmax = max(LL) if len(LL) else 0
     if Lmax > NMAX:
         sys.exit("** ERROR: `bad list` max (%d) is greater than\n"
                  "   the apparent max subrick index (%d).\n" %

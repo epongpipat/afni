@@ -155,10 +155,7 @@ class FDANode(mdp.Node):
 
         If 'n' is an integer, then use the first 'n' components.
         """
-        if n:
-            v = self.v[:, 0:n]
-        else:
-            v = self.v
+        v = self.v[:, 0:n] if n else self.v
         return mdp.utils.mult(x-self.avg, v)
 
     def _inverse(self, y):

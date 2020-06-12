@@ -74,13 +74,11 @@ def read_geometry(filepath):
                     faces[nface] = quad[0], quad[1], quad[3]
                     nface += 1
                     faces[nface] = quad[2], quad[3], quad[1]
-                    nface += 1
                 else:
                     faces[nface] = quad[0], quad[1], quad[2]
                     nface += 1
                     faces[nface] = quad[0], quad[2], quad[3]
-                    nface += 1
-
+                nface += 1
         elif magic == 16777214:  # Triangle file
             create_stamp = fobj.readline()
             _ = fobj.readline()
@@ -185,12 +183,12 @@ def read_annot(filepath, orig_ids=False):
         if not ctab_exists:
             raise Exception('Color table not found in annotation file')
         n_entries = np.fromfile(fobj, dt, 1)[0]
+        names = []
         if n_entries > 0:
             length = np.fromfile(fobj, dt, 1)[0]
             orig_tab = np.fromfile(fobj, '>c', length)
             orig_tab = orig_tab[:-1]
 
-            names = list()
             ctab = np.zeros((n_entries, 5), np.int)
             for i in xrange(n_entries):
                 name_length = np.fromfile(fobj, dt, 1)[0]
@@ -209,7 +207,6 @@ def read_annot(filepath, orig_ids=False):
             length = np.fromfile(fobj, dt, 1)[0]
             _ = np.fromfile(fobj, "|S%d" % length, 1)[0]  # Orig table path
             entries_to_read = np.fromfile(fobj, dt, 1)[0]
-            names = list()
             for i in xrange(entries_to_read):
                 _ = np.fromfile(fobj, dt, 1)[0]  # Structure
                 name_length = np.fromfile(fobj, dt, 1)[0]
@@ -239,5 +236,4 @@ def read_label(filepath):
         Array with indices of vertices included in label
 
     """
-    label_array = np.loadtxt(filepath, dtype=np.int, skiprows=2, usecols=[0])
-    return label_array
+    return np.loadtxt(filepath, dtype=np.int, skiprows=2, usecols=[0])

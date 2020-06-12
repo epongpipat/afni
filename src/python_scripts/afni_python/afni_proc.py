@@ -1492,7 +1492,7 @@ class SubjProcSream:
     def get_user_opts(self):
         self.valid_opts.check_special_opts(self.argv)
         self.user_opts = read_options(self.argv, self.valid_opts)
-        if self.user_opts == None: return 1     # error condition
+        if self.user_opts is None: return 1     # error condition
         if len(self.user_opts.olist) == 0:      # no options: apply -help
             show_program_help()
             return 0
@@ -1506,7 +1506,7 @@ class SubjProcSream:
         if self.user_opts.find_opt('-show_valid_opts'):
             self.valid_opts.show('', 1)
             return 0  # gentle termination
-        
+
         # apply the user options
         rv = self.apply_initial_opts(self.user_opts)
         if rv != None: return rv
@@ -2096,10 +2096,10 @@ class SubjProcSream:
            
            return error code and new list"""
         err = 0
-        if not bname in BlockLabels:
+        if bname not in BlockLabels:
             print("** ABAL error: block '%s' is invalid" % bname)
             return 1, blocks
-        if not prelab in BlockLabels:
+        if prelab not in BlockLabels:
             print("** ABAL error: prelab '%s' is invalid" % prelab)
             return 1, blocks
         try: preindex = blocks.index(prelab)
@@ -2111,7 +2111,7 @@ class SubjProcSream:
         if preindex < 0:
             print("** error: blocks.index failure for '%s'" % prelab)
             err = 1
-        
+
         if err: return 1, blocks
 
         # else add the block to blocklist
@@ -2125,10 +2125,10 @@ class SubjProcSream:
            
            return error code and new list"""
         err = 0
-        if not bname in BlockLabels:
+        if bname not in BlockLabels:
             print("** ABBL error: block '%s' is invalid" % bname)
             return 1, blocks
-        if not postlab in BlockLabels:
+        if postlab not in BlockLabels:
             print("** ABBL error: postlab '%s' is invalid" % postlab)
             return 1, blocks
         try: postindex = blocks.index(postlab)
@@ -2140,7 +2140,7 @@ class SubjProcSream:
         if postindex < 0:
             print("** error: blocks.index failure for '%s'" % postlab)
             err = 1
-        
+
         if err: return 1, blocks
 
         # else add the block to blocklist
@@ -2161,10 +2161,10 @@ class SubjProcSream:
         errs = 0
         for block in self.blocks:
             cmd_str = BlockCmdFunc[block.label](self, block)
-            if cmd_str == None:
-               print("** script creation failure for block '%s'" % block.label)
-               errs += 1
-               break
+            if cmd_str is None:
+                print("** script creation failure for block '%s'" % block.label)
+                errs += 1
+                break
 
             # allow for early termination
             if cmd_str == 'DONE': return None
@@ -2198,8 +2198,7 @@ class SubjProcSream:
         if errs > 0:
             # default to removing any created script
             opt = self.user_opts.find_opt('-keep_script_on_err')
-            if not opt or opt_is_no(opt):
-                if os.path.isfile(self.script): os.remove(self.script)
+            if (not opt or opt_is_no(opt)) and os.path.isfile(self.script): os.remove(self.script)
             return 1    # so we print all errors before leaving
 
         self.report_final_messages()
@@ -2218,10 +2217,13 @@ class SubjProcSream:
                     print("-- using default: will not apply EPI Automask")
                     print("   (see 'MASKING NOTE' from the -help for details)")
 
-            if self.ricor_nreg > 0 and self.ricor_apply == 'no':
-                if not self.user_opts.find_opt('-regress_apply_ricor'):
-                    print('** note: ricor regressors are no longer applied' \
-                              ' in final regresion')
+            if (
+                self.ricor_nreg > 0
+                and self.ricor_apply == 'no'
+                and not self.user_opts.find_opt('-regress_apply_ricor')
+            ):
+                print('** note: ricor regressors are no longer applied' \
+                          ' in final regresion')
 
             if self.runs == 1:
                 print("\n-------------------------------------\n" \
@@ -2494,10 +2496,9 @@ class SubjProcSream:
             if not self.blocks_ordered('ricor', 'volreg'):
                 errs += 1
                 print("** warning: 'volreg' should preceed 'ricor'")
-        if self.find_block('blur'):
-            if not self.blocks_ordered('blur', 'scale'):
-                errs += 1
-                print("** warning: 'blur' should preceed 'scale'")
+        if self.find_block('blur') and not self.blocks_ordered('blur', 'scale'):
+            errs += 1
+            print("** warning: 'blur' should preceed 'scale'")
         if self.find_block('regress'):
             if not self.blocks_ordered('tshift', 'regress'):
                 errs += 1

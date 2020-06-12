@@ -174,10 +174,7 @@ def check_arr(test_id, V_in, in_type, out_type, scaling_type):
         else:
             abs_mx_e = None
             exp_abs_mx_e = None
-        if np.any(abs_fails):
-            rel_mx_e = rel_err[abs_fails].max()
-        else:
-            rel_mx_e = None
+        rel_mx_e = rel_err[abs_fails].max() if np.any(abs_fails) else None
         print (test_id,
                np.dtype(in_type).str,
                np.dtype(out_type).str,

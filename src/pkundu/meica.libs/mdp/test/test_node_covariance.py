@@ -54,8 +54,8 @@ def testdtypeCovarianceMatrix():
         assert_type_equal(avg.dtype,type)
 
 def testdtypeDelayCovarianceMatrix():
+    dt = 5
     for type in TESTYPES:
-        dt = 5
         mat,mix,inp = get_random_mix(type='d')
         cov = utils.DelayCovarianceMatrix(dt=dt, dtype=type)
         cov.update(inp)

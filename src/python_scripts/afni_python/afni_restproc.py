@@ -1082,8 +1082,7 @@ class RestInterface:
       cmd = "@auto_tlrc -base TT_N27+tlrc -no_ss -input %s" % curANAT
       self.write_execute(cmd)
       anatp,anats = remove_suffix(curANAT)
-      anatt = anatp + "+tlrc"
-      return anatt
+      return anatp + "+tlrc"
 
    def shift_reg_align(self, curEPI, curANAT, curASEG, curALIGN, curREGMASKS):
       #tshift and register epi 
@@ -1091,10 +1090,7 @@ class RestInterface:
       #also align the aseg file
       epip,epis = remove_suffix(curEPI)
       anatp,anats = remove_suffix(curANAT)
-      if self.ss:
-         has_skull = "yes"
-      else:
-         has_skull = "no"
+      has_skull = "yes" if self.ss else "no"
       if self.epi2anat:
          #align epi 2 anat
          self.info("Align EPI to ANAT")
@@ -1144,17 +1140,11 @@ class RestInterface:
                   regmaskp, regmask)
                self.write_execute(cmd)
                curREGMASKS[i] = regmaskp + "_al" + regmasks
-         if self.tshift:
-            epi_al = epip + "_tsh_vr" + epis
-         else:
-            epi_al = epip + "_vr" + epis
+         epi_al = epip + "_tsh_vr" + epis if self.tshift else epip + "_vr" + epis
          anat_al = anatp + "_al" + anats
          xform = None
 
-      if self.tshift:
-         mot = epip + "_tsh_vr_motion.1D"
-      else:
-         mot = epip + "_vr_motion.1D"
+      mot = epip + "_tsh_vr_motion.1D" if self.tshift else epip + "_vr_motion.1D"
       return epi_al, anat_al, mot, aseg_al, xform, curREGMASKS
 
    def tcat(self, curEPI, curMOTION, curRVT):
@@ -1207,7 +1197,7 @@ class RestInterface:
    def ext_wm(self, curEPI, curASEG):
       #prep the WM mask using the selected erosion
       #extract the local WM regressors using the selected sphere size
-      if curASEG == None:
+      if curASEG is None:
          return None
       self.info("Prepare white matter regressor mask")
       asegp,asegs = remove_suffix(curASEG)
@@ -1245,20 +1235,21 @@ class RestInterface:
       return curREGMASKS
    def ext_mask_regs(self, curEPI, curREGLIST, curREGMASKS):
       self.info("Extract regressors from masks")
-      for i in range(len(curREGMASKS)):
-         if curREGMASKS[i] == None:
+      for curREGMASK in curREGMASKS:
+         if curREGMASK is None:
             continue
-         if isinstance(curREGMASKS[i], list):
+         if isinstance(curREGMASK, list):
             #local regmask
-            regmask = curREGMASKS[i][0]
+            regmask = curREGMASK[0]
             regmaskp,regmasks = remove_suffix(regmask)
-            cmd = "3dLocalstat -prefix %s.reg -nbhd \'SPHERE(%s)\' -stat mean -mask %s -use_nonmask %s" % \
-               (regmaskp,curREGMASKS[i][1], regmask, curEPI)
+            cmd = (
+                "3dLocalstat -prefix %s.reg -nbhd \'SPHERE(%s)\' -stat mean -mask %s -use_nonmask %s"
+                % (regmaskp, curREGMASK[1], regmask, curEPI))
             self.write_execute(cmd)
             curREGLIST.append("%s.reg%s" % (regmaskp, regmasks))
          else:
             #globalregmask
-            regmask = curREGMASKS[i]
+            regmask = curREGMASK
             regmaskp,regmasks = remove_suffix(regmask)
             cmd = "3dmaskave -q -mask %s %s > %s.reg.1D" % (regmask, curEPI, regmaskp)
             self.write_execute(cmd)
@@ -1269,7 +1260,7 @@ class RestInterface:
    def ext_vent(self, curEPI, curASEG):
       #prep the ventricle mask using the selected erosion
       #extract the ventricle signal regressor
-      if curASEG == None:
+      if curASEG is None:
          return None
       self.info("Extract ventricle regressor")
       asegp,asegs = remove_suffix(curASEG)
@@ -1293,7 +1284,7 @@ class RestInterface:
 
    def prep_blur(self, maskWM, maskVENT, curANAT, curEPI, maskBRAIN):
       #prep the blurring mask with grey matter labeled 1 and non-grey matter labeled 2
-      if maskWM == None:
+      if maskWM is None:
          #if no aseg file is given, just blur everything
          return maskBRAIN, None
       self.info("Prepare blurring mask with GM=1, NG=2")
@@ -1354,7 +1345,7 @@ class RestInterface:
             print "ERROR: %s is not a .1D or a .BRIK file" % regs[i]
 
    def det_1d(self, cur1D):
-      if cur1D == None:
+      if cur1D is None:
          return None
       if self.polort == "0":
          return cur1D
@@ -1366,7 +1357,7 @@ class RestInterface:
       return next1D
 
    def det_4d(self, cur4D):
-      if cur4D == None:
+      if cur4D is None:
          return None
       if self.polort == "0":
          return cur4D
@@ -1400,7 +1391,7 @@ class RestInterface:
       return epip + ".blur" + epis
 
    def copy_result_1D(self, dset, dest):
-      if dset == None:
+      if dset is None:
          return
       cmd = "cp %s %s" % (dset, dest)
       self.write_execute(cmd)
@@ -1408,7 +1399,7 @@ class RestInterface:
    def copy_result_BRIK(self, dset, dest, anatt, rmode):
       #copy a result file that is in head/brik format
       #the result may not exist, so maybe do nothing
-      if dset == None:
+      if dset is None:
          return
       #talairach dset if tlrclast was chosen
       if self.tlrclast:
@@ -1420,7 +1411,7 @@ class RestInterface:
       self.write_execute(cmd)
    def just_copy_result_BRIK(self, dset, dest):
       #just copy the result, no chance of talairaching (to handle the anat)
-      if dset == None:
+      if dset is None:
          return
       cmd = "3dcopy %s %s" % (dset, dest)
       self.write_execute(cmd)
@@ -1485,8 +1476,12 @@ class RestInterface:
          "\'100*sind(abs(a)/2) + 100*sind(abs(b)/2) + " + \
          "100*sind(abs(c)/2) + abs(d) + abs(e) + abs(f)\' > %s.deltamotion.FD.1D" % (cur1Dp)
       self.write_execute(cmd)
-      curFDCEN = self.mask_moderate_vals("%s.deltamotion.FD.1D" % cur1Dp, self.fdlimit, self.censorleft, self.censorright)
-      return curFDCEN
+      return self.mask_moderate_vals(
+          "%s.deltamotion.FD.1D" % cur1Dp,
+          self.fdlimit,
+          self.censorleft,
+          self.censorright,
+      )
 
    def create_dvars_censor(self, curEPI, maskBRAIN):
       #create a censor file based on the dvars measure from Power et. al Neuroimage 2012
@@ -1535,20 +1530,20 @@ class RestInterface:
       noisep,noises = remove_suffix(origNOISE)
       cmd = "3dmaskave -sigma -q %s\'[0]\' > %s.noise.1D" % (origNOISE, noisep)
       self.write_execute(cmd)
-      
-      #correction factors for SNR computation
-      corr1 = 1.5263997
+
       corr8 = 1.4257312
       corr16 = 1.4198559
       corr32 = 1.4170053
       if channels == "1":
+         #correction factors for SNR computation
+         corr1 = 1.5263997
          cor = corr1
-      elif channels == "8":
-         cor = corr8
       elif channels == "16":
          cor = corr16
       elif channels == "32":
          cor = corr32
+      elif channels == "8":
+         cor = corr8
       else:
          print ("ERROR unknown number of channels: %s" % channels)
          sys.exit(1)
@@ -1562,7 +1557,7 @@ class RestInterface:
          cmd = "3dAllineate -cubic -1Dmatrix_apply %s -prefix %s.SNR_al -master %s %s" % (epiXFORM, epip, curEPI, SNR)
          self.write_execute(cmd)
          SNR = "%s.SNR_al%s" % (epip, masts)
-      
+
       #save a histogram of the SNR
       cmd = "3dhistog -min 0 -max 1300 %s > SNRhist.1D" % SNR
       self.write_execute(cmd)
@@ -1571,7 +1566,7 @@ class RestInterface:
    def write_apply_censor(self, curEPI, curCENSOR, prefix):
       #write the command to call this script to apply the censor file, in case -noexec was chosen
       #(in which case the censor file has not been created before, but will be when apply_censor is called)
-      if curCENSOR == None:
+      if curCENSOR is None:
          return curEPI
       self.info("Apply censor file")
       cmd = "afni_restproc.py -apply_censor %s %s %s" % (curEPI, curCENSOR, prefix)
@@ -1588,7 +1583,7 @@ class RestInterface:
       for line in f:
          if line.find('0') == -1:
             selectstr += str(i) + ','
-         i = i + 1
+         i += 1
       selectstr = selectstr[0:-1]
       cmd = "3dTcat -prefix %s %s\'[%s]\'" % (prefix, curEPI, selectstr)
       self.write_execute(cmd)
@@ -1638,7 +1633,7 @@ class RestInterface:
             print "ERROR: %s is not a .1D or a .BRIK file" % regs[i]
 
    def bpass_1d(self, cur1D):
-      if cur1D == None:
+      if cur1D is None:
          return None
       cur1Dp = split_1D(cur1D)
       next1D = cur1Dp + ".bpass.1D"
@@ -1647,7 +1642,7 @@ class RestInterface:
       return next1D
 
    def bpass_4d(self, cur4D):
-      if cur4D == None:
+      if cur4D is None:
          return None
       cur4Dp,cur4Ds = remove_suffix(cur4D)
       next4D = cur4Dp + ".bpass" + cur4Ds
@@ -1672,10 +1667,7 @@ class RestInterface:
       #determine if the input EPI has already been tshifted
       com = shell_com("3dAttribute TAXIS_OFFSETS %s" % curEPI, self.oexec, capture=1)
       com.run()
-      if len(com.so):
-         self.tshift = True
-      else:
-         self.tshift = False
+      self.tshift = True if len(com.so) else False
 
    def compute_corrmap(self, curEPI, maskGM):
       #compute average correlation maps using 3dTcorrMap
@@ -1893,14 +1885,14 @@ def copy_or_error(infile):
 
 def nstr(s):
    #to convert None to "" conveniently
-   if s == None:
+   if s is None:
       return ""
    return str(s)
 
 def remove_path_and_convert(dset):
    #remove path and convert any .nii or .mgz files to .BRIK format
    infile = dset[dset.rfind('/') + 1::]
-   if infile == None:
+   if infile is None:
       return None
    if infile[-4:] == ".mgz":
       inp = infile[:-4]

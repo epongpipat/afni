@@ -4,7 +4,7 @@ def _randomly_filled_hypercube(widths, num_elem=1000):
     """Fills a hypercube with given widths, centred at the origin.
     """
     p = []
-    for i in xrange(num_elem):
+    for _ in xrange(num_elem):
         rand_data = numx_rand.random(len(widths))
         rand_data = [w*(d - 0.5) for d, w in zip(rand_data, widths)]
         p.append(tuple(rand_data))
@@ -84,6 +84,8 @@ def test_ShogunSVMClassifier():
     # TODO: Implement parameter ranges
     num_train = 100
     num_test = 50
+    radius = 0.3
+
     for positions in [((1,), (-1,)),
                       ((1,1), (-1,-1)),
                       ((1,1,1), (-1,-1,1)),
@@ -91,8 +93,6 @@ def test_ShogunSVMClassifier():
                       ((1,1,1,1), (-1,-1,-1,-1)),
                       ((1,1), (-1,-1), (1, -1), (-1, 1))
                       ]:
-
-        radius = 0.3
 
         if len(positions) == 2:
             labels = (-1, 1)
@@ -203,13 +203,13 @@ class TestLibSVMClassifier(object):
 
     def test_that_parameters_are_correct(self):
         import svm as libsvm
+        C = 1.01
+        epsilon = 1.1e-5
         for comb in utils.orthogonal_permutations(self.combinations):
-            C = 1.01
-            epsilon = 1.1e-5
             svm_node = mdp.nodes.LibSVMClassifier(params={"C": C, "eps": epsilon})
             svm_node.set_kernel(comb['kernel'])
             svm_node.set_classifier(comb['classifier'])
-            
+
             # check that the parameters are correct
             assert svm_node.parameter.kernel_type == getattr(libsvm, comb['kernel'])
             assert svm_node.parameter.svm_type == getattr(libsvm, comb['classifier'])
@@ -221,13 +221,13 @@ class TestLibSVMClassifier(object):
         num_test = 50
         C = 1.01
         epsilon = 1e-5
+        radius = 0.3
+
         for positions in [((1,), (-1,)),
                           ((1,1), (-1,-1)),
                           ((1,1,1), (-1,-1,1)),
                           ((1,1,1,1), (-1,1,1,1)),
                           ((1,1,1,1), (-1,-1,-1,-1))]:
-            radius = 0.3
-
             traindata_real, trainlab = _separable_data(positions, (-1, 1),
                                                        radius, num_train, True)
             testdata_real, testlab = _separable_data(positions, (-1, 1),
@@ -247,7 +247,7 @@ class TestLibSVMClassifier(object):
                                                       classifier=comb['classifier'],
                                                       probability=True,
                                                       params={"C": C, "eps": epsilon})
-                
+
                 # train in two chunks to check update mechanism
                 svm_node.train(traindata_real[:num_train], trainlab[:num_train])
                 svm_node.train(traindata_real[num_train:], trainlab[num_train:])

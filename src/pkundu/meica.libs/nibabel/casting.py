@@ -256,7 +256,7 @@ def type_info(np_type):
     # Oh dear, we don't recognize the type information.  Try some known types
     # and then give up. At this stage we're expecting exotic longdouble or their
     # complex equivalent.
-    if not np_type in (np.longdouble, np.longcomplex) or width not in (16, 32):
+    if np_type not in (np.longdouble, np.longcomplex) or width not in (16, 32):
         raise FloatingError('We had not expected type %s' % np_type)
     if (vals == (1, 1, 16) and on_powerpc() and
         _check_maxexp(np.longdouble, 1024)):
@@ -392,7 +392,7 @@ def as_int(x, check=True):
     fx = np.floor(x)
     if check and fx != x:
         raise FloatingError('Not an integer: %s' % x)
-    if not fx.dtype.type == np.longdouble:
+    if fx.dtype.type != np.longdouble:
         return int(x)
     # Subtract float64 chunks until we have all of the number. If the int is too
     # large, it will overflow
@@ -426,7 +426,7 @@ def int_to_float(val, flt_type):
     f : numpy scalar
         of type `flt_type`
     """
-    if not flt_type is np.longdouble:
+    if flt_type is not np.longdouble:
         return flt_type(val)
     faval = np.longdouble(0)
     while val != 0:
@@ -683,7 +683,7 @@ def able_int_type(values):
     >>> able_int_type([-1, 1]) == np.int8
     True
     """
-    if any([v % 1 for v in values]):
+    if any(v % 1 for v in values):
         return None
     mn = min(values)
     mx = max(values)

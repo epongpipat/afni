@@ -31,9 +31,8 @@ def get_code(line_in):
 
     ## get the last digits and see if the code is there
     line_end = cur_line[-3:]
-    if len(line_end) == 3:
-        if line_end[0] == "~" and line_end[2] == "~":
-            hdr_code = line_end[1]
+    if len(line_end) == 3 and line_end[0] == "~" and line_end[2] == "~":
+        hdr_code = line_end[1]
 
     return hdr_code
 

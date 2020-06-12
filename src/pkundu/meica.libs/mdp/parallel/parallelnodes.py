@@ -133,17 +133,17 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
         """
         args, varargs, varkw, defaults = inspect.getargspec(self.__init__)
         args.remove("self")
-        if defaults:
-            non_default_keys = args[:-len(defaults)]
-        else:
-            non_default_keys = []
-        kwargs = dict((key, getattr(self, key))
-                      for key in args if hasattr(self, key))
+        non_default_keys = args[:-len(defaults)] if defaults else []
+        kwargs = {key: getattr(self, key) for key in args if hasattr(self, key)}
         # look for the key with an underscore in front
         for key in kwargs:
             args.remove(key)
-        under_kwargs = dict((key, getattr(self, '_' + key))
-                            for key in args if hasattr(self, '_' + key))
+        under_kwargs = {
+            key: getattr(self, '_' + key)
+            for key in args
+            if hasattr(self, '_' + key)
+        }
+
         for key in under_kwargs:
             args.remove(key)
         kwargs.update(under_kwargs)

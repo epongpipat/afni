@@ -156,7 +156,7 @@ def parse_PAR_header(fobj):
             # try to get the header version
             if line.count('image export tool'):
                 version = line.split()[-1]
-                if not version in supported_versions:
+                if version not in supported_versions:
                     warnings.warn(
                           "PAR/REC version '%s' is currently not "
                           "supported -- making an attempt to read "
@@ -287,7 +287,7 @@ class PARRECHeader(Header):
             uprops = [np.unique(prop[i]) for i in range(len(prop.shape))]
         else:
             uprops = [np.unique(prop)]
-        if not np.prod([len(uprop) for uprop in uprops]) == 1:
+        if np.prod([len(uprop) for uprop in uprops]) != 1:
             raise PARRECError('Varying %s in image sequence (%s). This is not '
                               'suppported.' % (name, uprops))
         else:
@@ -304,10 +304,9 @@ class PARRECHeader(Header):
         # slice orientation for the whole image series
         slice_thickness = self._get_unique_image_prop('slice thickness')[0]
         voxsize_inplane = self._get_unique_image_prop('pixel spacing')
-        voxsize = np.array((voxsize_inplane[0],
+        return np.array((voxsize_inplane[0],
                             voxsize_inplane[1],
                             slice_thickness))
-        return voxsize
 
 
     def get_ndim(self):
@@ -445,9 +444,7 @@ class PARRECHeader(Header):
         aff[:3,:3] = scaled
         # offset
         aff[:3,3] = fov_center_offset
-        if origin == 'fov':
-            pass
-        elif origin == 'scanner':
+        if origin == 'scanner':
             # offset to scanner's iso center (always in ap, fh, rl)
             # -- turn into rl, ap, fh and then lr, pa, fh
             iso_offset = self.general_info['off_center'][[2,0,1]] * [-1,-1,0]
@@ -471,7 +468,7 @@ class PARRECHeader(Header):
         ndtivolumes = (self.general_info['max_diffusion_values'] - 1) \
                         * self.general_info['max_gradient_orient']
         nslices = len(np.unique(self.image_defs['slice number']))
-        if not nslices == self.general_info['max_slices']:
+        if nslices != self.general_info['max_slices']:
             raise PARRECError("Header inconsistency: Found %i slices, "
                               "but header claims to have %i."
                               % (nslices, self.general_info['max_slices']))

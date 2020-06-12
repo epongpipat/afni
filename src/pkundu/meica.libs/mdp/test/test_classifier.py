@@ -58,7 +58,7 @@ def testSignumClassifier():
 
 def testPerceptronClassifier():
     or_Classifier = PerceptronClassifier()
-    for i in xrange(100):
+    for _ in xrange(100):
         or_Classifier.train(mdp.numx.array([[0., 0.]]), -1)
         or_Classifier.train(mdp.numx.array([[0., 1.], [1., 0.], [1., 1.]]), 1)
     assert or_Classifier.input_dim == 2
@@ -67,14 +67,14 @@ def testPerceptronClassifier():
     assert res.tolist() == [-1, 1, 1, 1]
 
     and_Classifier = PerceptronClassifier()
-    for i in xrange(100):
+    for _ in xrange(100):
         and_Classifier.train(mdp.numx.array([[0., 0.], [0., 1.], [1., 0.]]), -1)
         and_Classifier.train(mdp.numx.array([[1., 1.]]), 1)
     res = and_Classifier.label(mdp.numx.array([[0., 0.], [0., 1.], [1., 0.], [1., 1.]]))
     assert res.tolist() == [-1, -1, -1, 1]
 
     xor_Classifier = PerceptronClassifier()
-    for i in xrange(100):
+    for _ in xrange(100):
         xor_Classifier.train(mdp.numx.array([[0., 0.], [1., 1.]]), -1)
         xor_Classifier.train(mdp.numx.array([[0., 1.], [1., 0.]]), 1)
     res = xor_Classifier.label(mdp.numx.array([[0., 0.], [0., 1.], [1., 0.], [1., 1.]]))

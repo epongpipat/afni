@@ -369,7 +369,7 @@ class AnalyzeHeader(WrapStruct):
         >>> hdr.get_value_label('datatype')
         'float32'
         '''
-        if not fieldname in self._field_recoders:
+        if fieldname not in self._field_recoders:
             raise ValueError('%s not a coded field' % fieldname)
         code = int(self._structarr[fieldname])
         return self._field_recoders[fieldname].label[code]
@@ -651,9 +651,9 @@ class AnalyzeHeader(WrapStruct):
         hdr = self._structarr
         dims = hdr['dim']
         ndim = dims[0]
-        return shape_zoom_affine(hdr['dim'][1:ndim+1],
-                                 hdr['pixdim'][1:ndim+1],
-                                 self.default_x_flip)
+        return shape_zoom_affine(
+            dims[1 : ndim + 1], hdr['pixdim'][1 : ndim + 1], self.default_x_flip
+        )
 
     get_best_affine = get_base_affine
 
@@ -934,10 +934,7 @@ class AnalyzeImage(SpatialImage):
         # analyze images but most often this is because it's a single nifti file
         hdr_img_same = hdr_fh.same_file_as(img_fh)
         hdrf = hdr_fh.get_prepare_fileobj(mode='wb')
-        if hdr_img_same:
-            imgf = hdrf
-        else:
-            imgf = img_fh.get_prepare_fileobj(mode='wb')
+        imgf = hdrf if hdr_img_same else img_fh.get_prepare_fileobj(mode='wb')
         slope, inter = get_slope_inter(arr_writer)
         self._write_header(hdrf, hdr, slope, inter)
         # Write image
@@ -949,9 +946,8 @@ class AnalyzeImage(SpatialImage):
         arr_writer.to_fileobj(imgf)
         if hdr_fh.fileobj is None: # was filename
             hdrf.close()
-        if not hdr_img_same:
-            if img_fh.fileobj is None: # was filename
-                imgf.close()
+        if not hdr_img_same and img_fh.fileobj is None: # was filename
+            imgf.close()
         self._header = hdr
         self.file_map = file_map
 
@@ -974,7 +970,7 @@ class AnalyzeImage(SpatialImage):
         # We need to update the header if the data shape has changed.  It's a
         # bit difficult to change the data shape using the standard API, but
         # maybe it happened
-        if not self._data is None and hdr.get_data_shape() != self._data.shape:
+        if self._data is not None and hdr.get_data_shape() != self._data.shape:
             hdr.set_data_shape(self._data.shape)
         # If the affine is not None, and it is different from the main affine in
         # the header, update the heaader

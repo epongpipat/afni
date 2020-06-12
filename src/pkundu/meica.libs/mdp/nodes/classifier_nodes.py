@@ -313,7 +313,7 @@ class KMeansClassifier(ClassifierNode):
         else:
             centroids = self._centroids
 
-        for step in xrange(self.max_iter):
+        for _ in xrange(self.max_iter):
             # list of (sum_position, num_clusters)
             new_centroids = [(0., 0.)] * len(centroids)
             # cluster
@@ -420,8 +420,8 @@ class GaussianClassifier(ClassifierNode):
             self.p.append(p)
             self.inv_covs.append(utils.inv(cov))
 
-        for i in range(len(self.p)):
-            self.p[i] /= float(nitems)
+        for item in self.p:
+            item /= float(nitems)
 
         del self._cov_objs
 
@@ -544,8 +544,7 @@ class NearestMeanClassifier(ClassifierNode):
                         swapaxes(1,2) - self.ordered_means
         square_distances = (differences**2).sum(2)
         label_indices = square_distances.argmin(1)
-        labels = [self.ordered_labels[i] for i in label_indices]
-        return labels
+        return [self.ordered_labels[i] for i in label_indices]
     
     
 class KNNClassifier(ClassifierNode):
@@ -620,5 +619,4 @@ class KNNClassifier(ClassifierNode):
         min_inds = square_distances.argsort()
         win_inds = [numx.bincount(self.sample_label_indices[indices[0:self.k]]).
                     argmax(0) for indices in min_inds]
-        labels = [self.ordered_labels[i] for i in win_inds]
-        return labels
+        return [self.ordered_labels[i] for i in win_inds]

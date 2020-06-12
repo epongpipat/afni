@@ -107,10 +107,7 @@ def read(csa_str):
                'syngodt': syngodt,
                'last3': last3,
                'tag_no': tag_no}
-        if vm == 0:
-            n_values = n_items
-        else:
-            n_values = vm
+        n_values = n_items if vm == 0 else vm
         # data converter
         converter = _CONVERTERS.get(vr)
         # CSA1 specific length modifier
@@ -195,7 +192,7 @@ def is_mosaic(csa_dict):
     if get_acq_mat_txt(csa_dict) is None:
         return False
     n_o_m = get_n_mosaic(csa_dict)
-    return not (n_o_m is None) and n_o_m != 0
+    return n_o_m is not None and n_o_m != 0
 
 
 def get_n_mosaic(csa_dict):

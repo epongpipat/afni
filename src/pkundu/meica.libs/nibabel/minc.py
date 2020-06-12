@@ -73,8 +73,7 @@ class MincFile(object):
         return self._image.data.shape
 
     def get_zooms(self):
-        return tuple(
-            [float(dim.step) for dim in self._dims])
+        return tuple(float(dim.step) for dim in self._dims)
 
     def get_affine(self):
         nspatial = len(self._spatial_dims)

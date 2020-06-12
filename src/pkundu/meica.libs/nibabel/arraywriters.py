@@ -64,10 +64,7 @@ class ArrayWriter(object):
         """
         self._array = np.asanyarray(array)
         arr_dtype = self._array.dtype
-        if out_dtype is None:
-            out_dtype = arr_dtype
-        else:
-            out_dtype = np.dtype(out_dtype)
+        out_dtype = arr_dtype if out_dtype is None else np.dtype(out_dtype)
         self._out_dtype = out_dtype
         self._finite_range = None
         if self.scaling_needed():
@@ -126,9 +123,7 @@ class ArrayWriter(object):
         # during comparisons, and therefore int -> float conversions which are
         # not exact.  Only a problem for uint64 though.  We need as_int here to
         # work around a numpy 1.4.1 bug in uint conversion
-        if as_int(mn) >= as_int(info.min) and as_int(mx) <= as_int(info.max):
-            return False
-        return True
+        return as_int(mn) < as_int(info.min) or as_int(mx) > as_int(info.max)
 
     @property
     def array(self):
@@ -233,10 +228,7 @@ class SlopeArrayWriter(ArrayWriter):
         """
         self._array = np.asanyarray(array)
         arr_dtype = self._array.dtype
-        if out_dtype is None:
-            out_dtype = arr_dtype
-        else:
-            out_dtype = np.dtype(out_dtype)
+        out_dtype = arr_dtype if out_dtype is None else np.dtype(out_dtype)
         self._out_dtype = out_dtype
         self.scaler_dtype = np.dtype(scaler_dtype)
         self.reset()

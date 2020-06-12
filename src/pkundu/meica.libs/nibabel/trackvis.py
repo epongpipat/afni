@@ -345,13 +345,10 @@ def write(fileobj, streamlines,  hdr_mapping=None, endianness=None,
     # Get number of scalars and properties
     pts, scalars, props = streams0
     # calculate number of scalars
-    if not scalars is None:
-        n_s = scalars.shape[1]
-    else:
-        n_s = 0
+    n_s = scalars.shape[1] if scalars is not None else 0
     hdr['n_scalars'] = n_s
     # calculate number of properties
-    if not props is None:
+    if props is not None:
         n_p = props.size
         hdr['n_properties'] = n_p
     else:
@@ -399,7 +396,7 @@ def write(fileobj, streamlines,  hdr_mapping=None, endianness=None,
             pts = np.c_[pts, scalars]
         fileobj.write(pts.tostring())
         if n_p == 0:
-            if not (props is None or len(props) == 0):
+            if props is not None and len(props) != 0:
                 raise DataError('Expecting 0 properties per point')
         else:
             if props.size != n_p:
@@ -464,7 +461,7 @@ def _check_hdr_points_space(hdr, points_space):
         voxel_order = asstr(np.asscalar(hdr['voxel_order']))
         if voxel_order == '':
             voxel_order = 'LPS' # trackvis default
-        if not voxel_order == aff_order:
+        if voxel_order != aff_order:
             raise HeaderError('Affine implies voxel_order %s but '
                               'header voxel_order is %s' %
                               (aff_order, voxel_order))
@@ -484,10 +481,7 @@ def _hdr_from_mapping(hdr=None, mapping=None, endianness=native_code):
                 return mapping.copy()
         # otherwise make a new empty header.   If no version specified,
         # go for default (2)
-        if mapping is None:
-            version = 2
-        else:
-            version =  mapping.get('version', 2)
+        version = 2 if mapping is None else mapping.get('version', 2)
         hdr = empty_header(endianness, version)
     if mapping is None:
         return hdr
@@ -786,7 +780,7 @@ class TrackvisFile(object):
         self.endianness = endianness
         self.filename = filename
         self.points_space = points_space
-        if not affine is None:
+        if affine is not None:
             self.set_affine(affine, pos_vox=True, set_order=True)
 
     @classmethod

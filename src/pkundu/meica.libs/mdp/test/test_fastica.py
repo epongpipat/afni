@@ -29,24 +29,13 @@ def fastICA_id(parms):
     app =     'AP:'+parms['approach']
     nl =      'NL:'+parms['g']
     fine_nl = 'FT:'+str(parms['fine_g'])
-    if parms['sample_size'] == 1:
-        compact = 'SA:01 '
-    else:
-        compact = 'SA:<1 '
-    if parms['mu'] == 1:
-        compact += 'S:01'
-    else:
-        compact += 'S:<1'
-    desc = ' '.join([app, nl, fine_nl, compact])
-    return desc
+    compact = 'SA:01 ' if parms['sample_size'] == 1 else 'SA:<1 '
+    compact += 'S:01' if parms['mu'] == 1 else 'S:<1'
+    return ' '.join([app, nl, fine_nl, compact])
 
 
 def test_FastICA(parms):
-    if parms['g'] == 'skew':
-        rand_func = mdp.numx_rand.exponential
-    else:
-        rand_func = uniform
-
+    rand_func = mdp.numx_rand.exponential if parms['g'] == 'skew' else uniform
     # try two times just to clear failures due to randomness
     for exc in (Exception, ()):
         try:

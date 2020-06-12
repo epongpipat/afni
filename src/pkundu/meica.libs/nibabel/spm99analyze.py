@@ -300,10 +300,7 @@ class Spm99AnalyzeImage(analyze.AnalyzeImage):
             return
         import scipy.io as sio
         hdr = self._header
-        if hdr.default_x_flip:
-            M = np.dot(np.diag([-1, 1, 1, 1]), mat)
-        else:
-            M = mat
+        M = np.dot(np.diag([-1, 1, 1, 1]), mat) if hdr.default_x_flip else mat
         # Adjust for matlab 1,1,1 voxel origin
         from_111 = np.eye(4)
         from_111[:3,3] = -1

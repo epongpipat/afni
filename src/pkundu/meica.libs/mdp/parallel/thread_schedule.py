@@ -36,10 +36,7 @@ class ThreadScheduler(Scheduler):
         super(ThreadScheduler, self).__init__(
                                             result_container=result_container,
                                             verbose=verbose)
-        if n_threads:
-            self._n_threads = n_threads
-        else:
-            self._n_threads = cpu_count()
+        self._n_threads = n_threads if n_threads else cpu_count()
         self._n_active_threads = 0
         self.copy_callable = copy_callable
 
@@ -51,13 +48,12 @@ class ThreadScheduler(Scheduler):
         """
         task_started = False
         while not task_started:
+            # release lock for other threads and wait
+            self._lock.release()
             if self._n_active_threads >= self._n_threads:
-                # release lock for other threads and wait
-                self._lock.release()
                 time.sleep(SLEEP_TIME)
                 self._lock.acquire()
             else:
-                self._lock.release()
                 task_callable = task_callable.fork()
                 if self.copy_callable:
                     # create a deep copy of the task_callable,

@@ -45,8 +45,7 @@ def make_out_name(A):
     if ll == -1:
         return A+"_helpy.txt"
     else:
-        out = A[:N-1-ll]+"_helpy" + A[N-1-ll:]
-        return out
+        return A[:N-1-ll]+"_helpy" + A[N-1-ll:]
 
 def wrapify_string(x, endchar = -1):
     if x.__contains__('"'):

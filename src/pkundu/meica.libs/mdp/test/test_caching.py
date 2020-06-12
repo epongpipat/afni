@@ -64,7 +64,7 @@ def test_caching_extension():
     k = 0
     for i in range(3):
         x = mdp.numx.array([[i]], dtype='d')
-        for j in range(2):
+        for _ in range(2):
             k += 1
             assert mdp.numx.all(node.execute(x) == x)
             assert _counter == k

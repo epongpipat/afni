@@ -40,10 +40,7 @@ class CovarianceMatrix(object):
         If bias is True, the covariance matrix is normalized by dividing
         by T instead of the usual T-1.
         """
-        if dtype is None:
-            self._dtype = None
-        else:
-            self._dtype = numx.dtype(dtype)
+        self._dtype = None if dtype is None else numx.dtype(dtype)
         self._input_dim = None  # will be set in _init_internals
         # covariance matrix, updated during the training phase
         self._cov_mtx = None
@@ -104,17 +101,10 @@ class CovarianceMatrix(object):
 
         ##### fix the training variables
         # fix the covariance matrix (try to do everything inplace)
-        if self.bias:
-            cov_mtx /= tlen
-        else:
-            cov_mtx /= tlen - 1
-
+        cov_mtx /= tlen if self.bias else tlen - 1
         if center:
             avg_mtx = numx.outer(avg, avg)
-            if self.bias:
-                avg_mtx /= tlen*(tlen)
-            else:
-                avg_mtx /= tlen*(tlen - 1)
+            avg_mtx /= tlen*(tlen) if self.bias else tlen*(tlen - 1)
             cov_mtx -= avg_mtx
 
         # fix the average
@@ -158,11 +148,7 @@ class DelayCovarianceMatrix(object):
         # time delay
         self._dt = int(dt)
 
-        if dtype is None:
-            self._dtype = None
-        else:
-            self._dtype = numx.dtype(dtype)
-
+        self._dtype = None if dtype is None else numx.dtype(dtype)
         # clean up variables to spare on space
         self._cov_mtx = None
         self._avg = None
@@ -239,11 +225,7 @@ class DelayCovarianceMatrix(object):
         avg_mtx /= tlen
 
         cov_mtx -= avg_mtx
-        if self.bias:
-            cov_mtx /= tlen
-        else:
-            cov_mtx /= tlen - 1
-
+        cov_mtx /= tlen if self.bias else tlen - 1
         if A is not None:
             cov_mtx = mdp.utils.mult(A, mdp.utils.mult(cov_mtx, A.T))
 

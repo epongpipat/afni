@@ -179,10 +179,7 @@ def testPCANode_SVD():
 
 
 def mock_symeig(x, range=None, overwrite=False):
-    if range is None:
-        N = x.shape[0]
-    else:
-        N = range[1]-range[0] + 1
+    N = x.shape[0] if range is None else range[1]-range[0] + 1
     y = numx.zeros((N,))
     z = numx.zeros((N,N))
     y[0] = -1

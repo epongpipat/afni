@@ -193,9 +193,10 @@ class _TemplateMetaClass(type):
 
     def __init__(cls, *args):
         for attr, val in cls.__dict__.items():
-            if attr == 'template' or attr.endswith('_template'):
-                if isinstance(val, basestring):
-                    setattr(cls, attr, cls.__compile(val, attr))
+            if (attr == 'template' or attr.endswith('_template')) and isinstance(
+                val, basestring
+            ):
+                setattr(cls, attr, cls.__compile(val, attr))
         type.__init__(cls, *args)
 
 

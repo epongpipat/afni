@@ -9,8 +9,7 @@ from _tools import *
 uniform = numx_rand.random
 
 def _get_default_flow(flow_class=mdp.Flow, node_class=BogusNode):
-    flow = flow_class([node_class(),node_class(),node_class()])
-    return flow
+    return flow_class([node_class(),node_class(),node_class()])
 
 # CheckpointFunction used in testCheckpointFunction
 class _CheckpointCollectFunction(mdp.CheckpointFunction):

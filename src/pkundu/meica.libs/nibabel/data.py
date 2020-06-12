@@ -84,7 +84,7 @@ class Datasource(object):
                 List of the paths of all the files in the data source.
 
         '''
-        out_list = list()
+        out_list = []
         for base, dirs, files in os.walk(self.base_path):
             if relative:
                 base = base[len(self.base_path)+1:]
@@ -297,7 +297,7 @@ def make_datasource(pkg_def, **kwargs):
                exception)
         if 'name' in pkg_def:
             msg += '\n\nYou may need the package "%s"' % pkg_def['name']
-        if not pkg_hint is None:
+        if pkg_hint is not None:
             msg += '\n\n%s' % pkg_hint
         raise DataError(msg)
     return VersionedDatasource(pth)
@@ -354,10 +354,7 @@ def datasource_or_bomber(pkg_def, **options):
     if (version is None or
         LooseVersion(ds.version) >= LooseVersion(version)):
         return ds
-    if 'name' in pkg_def:
-        pkg_name = pkg_def['name']
-    else:
-        pkg_name = 'data at ' + unix_relpath
+    pkg_name = pkg_def['name'] if 'name' in pkg_def else 'data at ' + unix_relpath
     msg = ('%(name)s is version %(pkg_version)s but we need '
            'version >= %(req_version)s\n\n%(pkg_hint)s' %
            dict(name=pkg_name,

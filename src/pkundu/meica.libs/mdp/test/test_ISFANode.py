@@ -156,7 +156,7 @@ def _ISFA_analytical_solution( nsources, nmat, dim, ica_ambiguity):
     #   - modify diagonal elements order to allow for a
     #     different solution for isfa:
     #     create index array
-    idx = range(0,dim)
+    idx = range(dim)
     #     take the second slowest element and put it at the end
     idx = [idx[0]]+idx[2:]+[idx[1]]
     diag = numx.take(diag, idx)
@@ -197,7 +197,7 @@ def testISFANode_AnalyticalSolution():
     dim = mdp.nodes._expanded_dim(deg, nsources)
     assert (nsources+ica_ambiguity) < dim, 'Too much ica ambiguity.'
     trials = 20
-    for trial in xrange(trials):
+    for _ in xrange(trials):
         # get analytical solution:
         # prepared matrices, solution for sfa, solution for isf
         covs,sfa_solution,isfa_solution=_ISFA_analytical_solution(

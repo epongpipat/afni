@@ -79,10 +79,7 @@ class ICANode(mdp.Cumulator, mdp.Node, ProjectMatrixMixin):
         self.limit = limit
         self.whitened = whitened
         self.white_comp = white_comp
-        if white_parm is None:
-            self.white_parm = {}
-        else:
-            self.white_parm = white_parm
+        self.white_parm = {} if white_parm is None else white_parm
         super(ICANode, self).__init__(input_dim, None, dtype)
 
 

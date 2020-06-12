@@ -156,7 +156,7 @@ class Header(object):
         self.set_data_dtype(data_dtype)
         self._zooms = ()
         self.set_data_shape(shape)
-        if not zooms is None:
+        if zooms is not None:
             self.set_zooms(zooms)
 
     @classmethod
@@ -214,7 +214,7 @@ class Header(object):
             self._shape = (0,)
             self._zooms = (1.0,)
             return
-        self._shape = tuple([int(s) for s in shape])
+        self._shape = tuple(int(s) for s in shape)
         # set any unset zooms to 1.0
         nzs = min(len(self._zooms), ndim)
         self._zooms = self._zooms[:nzs] + (1.0,) * (ndim-nzs)
@@ -223,7 +223,7 @@ class Header(object):
         return self._zooms
 
     def set_zooms(self, zooms):
-        zooms = tuple([float(z) for z in zooms])
+        zooms = tuple(float(z) for z in zooms)
         shape = self.get_data_shape()
         ndim = len(shape)
         if len(zooms) != ndim:
@@ -297,14 +297,14 @@ class SpatialImage(object):
            mapping giving file information for this image format
         '''
         self._data = data
-        if not affine is None:
+        if affine is not None:
             # Check that affine is array-like 4,4.  Maybe this is too strict at
             # this abstract level, but so far I think all image formats we know
             # do need 4,4.
             # Copy affine to  isolate from environment.  Specify float type to
             # avoid surprising integer rounding when setting values into affine
             affine = np.array(affine, dtype=np.float64, copy=True)
-            if not affine.shape == (4,4):
+            if affine.shape != (4, 4):
                 raise ValueError('Affine should be shape 4,4')
         self._affine = affine
         if extra is None:
@@ -312,9 +312,8 @@ class SpatialImage(object):
         self.extra = extra
         self._header = self.header_class.from_header(header)
         # if header not specified, get data type from input array
-        if header is None:
-            if hasattr(data, 'dtype'):
-                self._header.set_data_dtype(data.dtype)
+        if header is None and hasattr(data, 'dtype'):
+            self._header.set_data_dtype(data.dtype)
         # make header correspond with image and affine
         self.update_header()
         if file_map is None:

@@ -53,8 +53,8 @@ for w in params:
             for z in params:
                 q = (w, x, y, z)
                 Nq = np.sqrt(np.dot(q, q))
-                if not Nq == 0:
-                    q = tuple([e / Nq for e in q])
+                if Nq != 0:
+                    q = tuple(e / Nq for e in q)
                     unit_quats.add(q)
 
 

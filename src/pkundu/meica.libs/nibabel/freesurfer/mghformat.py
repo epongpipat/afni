@@ -116,9 +116,7 @@ class MGHHeader(object):
     def __str__(self):
         ''' Print the MGH header object information
         '''
-        txt = []
-        txt.append(str(self.__class__))
-        txt.append('Dims: ' + str(self.get_data_shape()))
+        txt = [str(self.__class__), 'Dims: ' + str(self.get_data_shape())]
         code = int(self._header_data['type'])
         txt.append('MRI Type: ' + self._data_type_codes.mritype[code])
         txt.append('goodRASFlag: ' + str(self._header_data['goodRASFlag']))
@@ -207,7 +205,6 @@ class MGHHeader(object):
         ''' Return copy of header
         '''
         return self.__class__(self.binaryblock, check=False)
-        pass
 
     def check_fix(self):
         ''' Pass. maybe for now'''
@@ -245,8 +242,7 @@ class MGHHeader(object):
         For examples see ``set_data_dtype``
         '''
         code = int(self._header_data['type'])
-        dtype = self._data_type_codes.numpy_dtype[code]
-        return dtype
+        return self._data_type_codes.numpy_dtype[code]
 
     def set_data_dtype(self, datatype):
         ''' Set numpy dtype for data from code or dtype or type
@@ -540,10 +536,10 @@ class MGHImage(SpatialImage):
         ''' Harmonize header with image data and affine
         '''
         hdr = self._header
-        if not self._data is None:
+        if self._data is not None:
             hdr.set_data_shape(self._data.shape)
 
-        if not self._affine is None:
+        if self._affine is not None:
             # for more information, go through save_mgh.m in FreeSurfer dist
             MdcD = self._affine[:3, :3]
             delta = np.sqrt(np.sum(MdcD * MdcD, axis=0))

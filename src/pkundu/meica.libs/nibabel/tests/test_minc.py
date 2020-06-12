@@ -65,8 +65,8 @@ def test_load():
 def test_compressed():
     # we can read minc compressed
     content = open(MINC_EXAMPLE['fname'], 'rb').read()
-    openers_exts = ((gzip.open, '.gz'), (bz2.BZ2File, '.bz2'))
     with InTemporaryDirectory():
+        openers_exts = ((gzip.open, '.gz'), (bz2.BZ2File, '.bz2'))
         for opener, ext in openers_exts:
             fname = 'test.mnc' + ext
             fobj = opener(fname, 'wb')

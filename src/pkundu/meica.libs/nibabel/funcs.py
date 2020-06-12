@@ -119,9 +119,8 @@ def concat_images(images, check_affines=True):
     for i, img in enumerate(images):
         if is_filename:
             img = load(img)
-        if check_affines:
-            if not np.all(img.get_affine() == affine):
-                raise ValueError('Affines do not match')
+        if check_affines and not np.all(img.get_affine() == affine):
+            raise ValueError('Affines do not match')
         out_data[i] = img.get_data()
     out_data = np.rollaxis(out_data, 0, len(i0shape)+1)
     klass = img0.__class__

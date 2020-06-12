@@ -25,7 +25,7 @@ class GiftiMetaData(object):
     the list self.data """
     def __init__(self, nvpair = None):
         self.data = []
-        if not nvpair is None:
+        if nvpair is not None:
             self.data.append(nvpair)
 
     @classmethod
@@ -52,8 +52,8 @@ class GiftiMetaData(object):
 \t<Name><![CDATA[%s]]></Name>
 \t<Value><![CDATA[%s]]></Value>
 </MD>\n""" % (ele.name, ele.value)
-            res = res + nvpair
-        res = res + "</MetaData>\n" 
+            res += nvpair
+        res += "</MetaData>\n"
         return res
 
     def print_summary(self):
@@ -86,18 +86,18 @@ class GiftiLabelTable(object):
         res = "<LabelTable>\n"
         for ele in self.labels:
             col = ''
-            if not ele.red is None:
+            if ele.red is not None:
                 col += ' Red="%s"' % str(ele.red)
-            if not ele.green is None:
+            if ele.green is not None:
                 col += ' Green="%s"' % str(ele.green)
-            if not ele.blue is None:
+            if ele.blue is not None:
                 col += ' Blue="%s"' % str(ele.blue)
-            if not ele.alpha is None:
+            if ele.alpha is not None:
                 col += ' Alpha="%s"' % str(ele.alpha)
             lab = """\t<Label Key="%s"%s><![CDATA[%s]]></Label>\n""" % \
                 (str(ele.key), col, ele.label)
-            res = res + lab
-        res = res + "</LabelTable>\n" 
+            res += lab
+        res += "</LabelTable>\n"
         return res
 
     def print_summary(self):
@@ -262,14 +262,14 @@ class GiftiDataArray(object):
         cda = klass(darray)
         cda.num_dim = len(darray.shape)
         cda.dims = list(darray.shape)
-        if datatype == None:
+        if datatype is None:
             cda.datatype = data_type_codes.code[darray.dtype]
         else:
             cda.datatype = data_type_codes.code[datatype]
         cda.intent = intent_codes.code[intent]
         cda.encoding = gifti_encoding_codes.code[encoding]
         cda.endian = gifti_endian_codes.code[endian]
-        if not coordsys is None:
+        if coordsys is not None:
             cda.coordsys = coordsys
         cda.ind_ord = array_index_order_codes.code[ordering]
         cda.meta = GiftiMetaData.from_dict(meta)
@@ -281,10 +281,10 @@ class GiftiDataArray(object):
         result = ""
         result += self.to_xml_open()
         # write metadata
-        if not self.meta is None:
+        if self.meta is not None:
             result += self.meta.to_xml()
         # write coord sys
-        if not self.coordsys is None:
+        if self.coordsys is not None:
             result += self.coordsys.to_xml()
         # write data array depending on the encoding
         dt_kind = data_type_codes.dtype[self.datatype].kind
@@ -292,7 +292,7 @@ class GiftiDataArray(object):
                            gifti_encoding_codes.specs[self.encoding],
                            KIND2FMT[dt_kind],
                            self.ind_ord)
-        result = result + self.to_xml_close()
+        result += self.to_xml_close()
         return result
 
     def to_xml_open(self):
@@ -306,7 +306,7 @@ class GiftiDataArray(object):
 \tExternalFileOffset="%s">\n"""
         di = ""
         for i, n in enumerate(self.dims):
-            di = di + '\tDim%s=\"%s\"\n' % (str(i), str(n))
+            di += '\tDim%s=\"%s\"\n' % (str(i), str(n))
         return out % (intent_codes.niistring[self.intent], \
                       data_type_codes.niistring[self.datatype], \
                       array_index_order_codes.label[self.ind_ord], \
@@ -352,14 +352,8 @@ class GiftiImage(object):
         if darrays is None:
             darrays = []
         self.darrays = darrays
-        if meta is None:
-            self.meta = GiftiMetaData()
-        else:
-            self.meta = meta
-        if labeltable is None:
-            self.labeltable = GiftiLabelTable()
-        else:
-            self.labeltable = labeltable
+        self.meta = GiftiMetaData() if meta is None else meta
+        self.labeltable = GiftiLabelTable() if labeltable is None else labeltable
         self.numDA = len(self.darrays)
         self.version = version
 
@@ -479,9 +473,9 @@ class GiftiImage(object):
         res = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE GIFTI SYSTEM "http://www.nitrc.org/frs/download.php/115/gifti.dtd">
 <GIFTI Version="%s"  NumberOfDataArrays="%s">\n""" % (self.version, str(self.numDA))
-        if not self.meta is None:
+        if self.meta is not None:
             res += self.meta.to_xml()
-        if not self.labeltable is None:
+        if self.labeltable is not None:
             res += self.labeltable.to_xml()
         for dar in self.darrays:
             res += dar.to_xml()

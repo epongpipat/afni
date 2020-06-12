@@ -260,15 +260,12 @@ def Proc_N_Print( X, R, file_prefix,
 def MakeName(file_prefix, fff, extra =''):
     
     # what's in the name
-    if fff.__contains__('.'):
-        fff_parta = fff.split('.')[:-1][0]
-    else:
-        fff_parta = str(fff)
+    fff_parta = fff.split('.')[:-1][0] if fff.__contains__('.') else str(fff)
     fff_partb = fff_parta.replace('/','_')
-    fname_vor = file_prefix + '__' + fff_partb 
+    fname_vor = file_prefix + '__' + fff_partb
     if extra:
         fname_vor+= '_' + extra
-    
+
     return fname_vor
 
 # ---------------------------------------------------------------------
@@ -425,7 +422,7 @@ def make_cmap(colors, position=None, bit=False,Nsegs=256):
     import matplotlib as mpl
     import numpy as np
     bit_rgb = np.linspace(0,1,256)
-    if position == None:
+    if position is None:
         position = np.linspace(0,1,len(colors))
     else:
         if len(position) != len(colors):
@@ -443,8 +440,7 @@ def make_cmap(colors, position=None, bit=False,Nsegs=256):
         cdict['green'].append((pos, color[1], color[1]))
         cdict['blue'].append((pos, color[2], color[2]))
 
-    cmap = mpl.colors.LinearSegmentedColormap('my_colormap',cdict,Nsegs)
-    return cmap
+    return mpl.colors.LinearSegmentedColormap('my_colormap',cdict,Nsegs)
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -712,9 +708,7 @@ def Calc_char_length_sphere(N):
     # that distance.
     alpha_rad = np.arccos(1.-2./N)    # np.sqrt(4./N) #np.arcsin(np.sqrt(4./N))
     alpha_def = alpha_rad*RADtoANG
-    sep = 2*alpha_def
-
-    return sep
+    return 2*alpha_def
     
 
 
@@ -881,8 +875,8 @@ def CARTtoSPH( X, mode = 'DEG' ):
 def SepMagnDir(X):
 
     Nx, Ny = np.shape(X)
-    
-    if not( Ny == 3 ):
+
+    if Ny != 3:
         sys.exit(34)
 
     Y = np.zeros((Nx,4))

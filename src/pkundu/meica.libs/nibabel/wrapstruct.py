@@ -493,10 +493,7 @@ class WrapStruct(object):
         '''
         current = self.endianness
         if endianness is None:
-            if current == native_code:
-                endianness = swapped_code
-            else:
-                endianness = native_code
+            endianness = swapped_code if current == native_code else native_code
         else:
             endianness = endian_codes[endianness]
         if endianness == current:

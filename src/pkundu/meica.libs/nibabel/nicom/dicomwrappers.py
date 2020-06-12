@@ -180,8 +180,8 @@ class Wrapper(object):
         zs = self.get('SpacingBetweenSlices')
         if zs is None:
             zs = self.get('SliceThickness')
-            if zs is None:
-                zs = 1
+        if zs is None:
+            zs = 1
         # Protect from python decimals in pydicom 0.9.7
         zs = float(zs)
         pix_space = map(float, pix_space)
@@ -401,8 +401,8 @@ class SiemensWrapper(Wrapper):
         self.dcm_data = dcm_data
         if csa_header is None:
             csa_header = csar.get_csa_header(dcm_data)
-            if csa_header is None:
-                csa_header = {}
+        if csa_header is None:
+            csa_header = {}
         self.csa_header = csa_header
 
     @one_time
@@ -434,7 +434,7 @@ class SiemensWrapper(Wrapper):
         ''' Add ICE dims from CSA header to signature '''
         signature = super(SiemensWrapper, self).series_signature
         ice = csar.get_ice_dims(self.csa_header)
-        if not ice is None:
+        if ice is not None:
             ice = ice[:6] + ice[8:9]
         signature['ICE_Dims'] = (ice, lambda x, y: x == y)
         return signature

@@ -189,10 +189,7 @@ def parse_filename(filename,
     ('/path/fname', 'ext2', '.gz', 't2')
     '''
     ignored = None
-    if match_case:
-        endswith = _endswith
-    else:
-        endswith = _iendswith
+    endswith = _endswith if match_case else _iendswith
     for ext in trailing_suffixes:
         if endswith(filename, ext):
             extpos = -len(ext)
@@ -256,10 +253,7 @@ def splitext_addext(filename,
     >>> splitext_addext('fname.ext.foo', ('.foo', '.bar'))
     ('fname', '.ext', '.foo')
     '''
-    if match_case:
-        endswith = _endswith
-    else:
-        endswith = _iendswith
+    endswith = _endswith if match_case else _iendswith
     for ext in addexts:
         if endswith(filename, ext):
             extpos = -len(ext)

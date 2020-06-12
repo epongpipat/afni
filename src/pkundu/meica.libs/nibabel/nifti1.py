@@ -329,8 +329,7 @@ class Nifti1Extension(object):
             # deal with unknown codes
             code = self._code
 
-        s = "Nifti1Extension('%s', '%s')" % (code, self._content)
-        return s
+        return "Nifti1Extension('%s', '%s')" % (code, self._content)
 
     def __eq__(self, other):
         return (self._code, self._content) == (other._code, other._content)
@@ -398,12 +397,8 @@ class Nifti1Extensions(list):
           code : int | str
             The ecode can be specified either literal or as numerical value.
         """
-        count = 0
         code = extension_codes.code[ecode]
-        for e in self:
-            if e.get_code() == code:
-                count += 1
-        return count
+        return sum(1 for e in self if e.get_code() == code)
 
     def get_codes(self):
         """Return a list of the extension code of all available extensions"""
@@ -415,9 +410,8 @@ class Nifti1Extensions(list):
         return np.sum([e.get_sizeondisk() for e in self])
 
     def __repr__(self):
-        s = "Nifti1Extensions(%s)" \
+        return "Nifti1Extensions(%s)" \
                 % ', '.join([str(e) for e in self])
-        return s
 
     def __cmp__(self, other):
         return cmp(list(self), list(other))
@@ -474,7 +468,7 @@ class Nifti1Extensions(list):
             if not len(ext_def) and size < 0:
                 break
             # otherwise there should be a full extension header
-            if not len(ext_def) == 8:
+            if len(ext_def) != 8:
                 raise HeaderDataError('failed to read extension header')
             ext_def = np.fromstring(ext_def, dtype=np.int32)
             if byteswap:
@@ -487,7 +481,7 @@ class Nifti1Extensions(list):
                         'extension size is not a multiple of 16 bytes')
             # read extension itself; esize includes the 8 bytes already read
             evalue = fileobj.read(int(esize - 8))
-            if not len(evalue) == esize - 8:
+            if len(evalue) != esize - 8:
                 raise HeaderDataError('failed to read extension content')
             # note that we read a full extension
             size -= esize
@@ -813,7 +807,7 @@ class Nifti1Header(SpmAnalyzeHeader):
         if affine is None:
             return
         affine = np.asarray(affine)
-        if not affine.shape == (4, 4):
+        if affine.shape != (4, 4):
             raise TypeError('Need 4x4 affine as input')
         trans = affine[:3, 3]
         RZS = affine[:3, :3]
@@ -832,7 +826,7 @@ class Nifti1Header(SpmAnalyzeHeader):
         # orthogonal matrix PR, to input R
         P, S, Qs = npl.svd(R)
         PR = np.dot(P, Qs)
-        if not strip_shears and not np.allclose(PR, R):
+        if not (strip_shears or np.allclose(PR, R)):
             raise HeaderDataError("Shears in affine and `strip_shears` is "
                                   "False")
         # Convert to quaternion
@@ -1080,12 +1074,12 @@ class Nifti1Header(SpmAnalyzeHeader):
             if inp not in (None, 0, 1, 2):
                 raise HeaderDataError('Inputs must be in [None, 0, 1, 2]')
         info = 0
-        if not freq is None:
-            info = info | ((freq+1) & 3)
-        if not phase is None:
-            info = info | (((phase+1) & 3) << 2)
-        if not slice is None:
-            info = info | (((slice+1) & 3) << 4)
+        if freq is not None:
+            info |= (freq+1) & 3
+        if phase is not None:
+            info |= ((phase+1) & 3) << 2
+        if slice is not None:
+            info |= ((slice+1) & 3) << 4
         self._structarr['dim_info'] = info
 
     def get_intent(self, code_repr='label'):
@@ -1494,9 +1488,7 @@ class Nifti1Header(SpmAnalyzeHeader):
         offset = hdr['vox_offset']
         if magic == asbytes('n+1'): # one file
             if offset >= 352:
-                if not offset % 16:
-                    return hdr, rep
-                else:
+                if offset % 16:
                     # SPM uses memory mapping to read the data, and
                     # apparently this has to start on 16 byte boundaries
                     rep.problem_msg = ('vox offset (=%s) not divisible '
@@ -1504,7 +1496,7 @@ class Nifti1Header(SpmAnalyzeHeader):
                     rep.problem_level = 30
                     if fix:
                         rep.fix_msg = 'leaving at current value'
-                    return hdr, rep
+                return hdr, rep
             rep.problem_level = 40
             rep.problem_msg = ('vox offset %d too low for '
                                'single file nifti1' % offset)

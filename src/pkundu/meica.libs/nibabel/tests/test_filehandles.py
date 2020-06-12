@@ -41,7 +41,7 @@ def test_multiload():
         tmpdir = mkdtemp()
         fname = pjoin(tmpdir, 'test.img')
         save(img, fname)
-        for i in range(N):
+        for _ in range(N):
             imgs.append(load(fname))
     finally:
         del img, imgs

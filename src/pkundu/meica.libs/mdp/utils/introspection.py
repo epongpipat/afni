@@ -84,10 +84,7 @@ def dig_node(x):
     arrays = _Walk()(x)
     for name in arrays.keys():
         ar = arrays[name]
-        if len(ar.shape) == 0:
-            size = 1
-        else:
-            size = mdp.numx.prod(ar.shape)
+        size = 1 if len(ar.shape) == 0 else mdp.numx.prod(ar.shape)
         bytes = ar.itemsize*size
         arrays[name] = (bytes, ar)
     return arrays, _format_dig(arrays)
@@ -119,10 +116,7 @@ def _memory_size_str(size, si_units=False):
 
     si_units -- If True si-units like kB are used instead of kiB.
     """
-    if si_units:
-        base = 10**3
-    else:
-        base = 2**10
+    base = 10**3 if si_units else 2**10
     scale = 0  # 1024**scale is the actual scale
     while size > base**(scale+1):
         scale += 1

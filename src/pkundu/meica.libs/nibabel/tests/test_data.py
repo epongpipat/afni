@@ -212,10 +212,10 @@ def test_find_data_dir():
 
 @with_environment
 def test_make_datasource():
-    pkg_def = dict(
-        relpath = 'pkg')
     with TemporaryDirectory() as tmpdir:
         nibd.get_data_path = lambda : [tmpdir]
+        pkg_def = dict(
+            relpath = 'pkg')
         yield (assert_raises,
            DataError,
            make_datasource,
@@ -247,10 +247,10 @@ def test_bomber_inspect():
 
 @with_environment
 def test_datasource_or_bomber():
-    pkg_def = dict(
-        relpath = 'pkg')
     with TemporaryDirectory() as tmpdir:
         nibd.get_data_path = lambda : [tmpdir]
+        pkg_def = dict(
+            relpath = 'pkg')
         ds = datasource_or_bomber(pkg_def)
         yield (assert_raises,
                DataError,

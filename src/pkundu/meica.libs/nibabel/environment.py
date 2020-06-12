@@ -58,10 +58,7 @@ def get_nipy_user_dir():
     except KeyError:
         pass
     home_dir = get_home_dir()
-    if os.name == 'posix':
-         sdir = '.nipy'
-    else:
-         sdir = '_nipy'
+    sdir = '.nipy' if os.name == 'posix' else '_nipy'
     return pjoin(home_dir, sdir)
 
 

@@ -68,11 +68,7 @@ class NIPALSNode(Cumulator, PCANode):
         # debug argument is ignored but needed by the base class
         super(NIPALSNode, self)._stop_training()
         self._adjust_output_dim()
-        if self.desired_variance is not None:
-            des_var = True
-        else:
-            des_var = False
-
+        des_var = True if self.desired_variance is not None else False
         X = self.data
         conv = self.conv
         dtype = self.dtype

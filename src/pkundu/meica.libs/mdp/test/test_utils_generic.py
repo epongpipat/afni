@@ -11,10 +11,7 @@ def test_eigenproblem(dtype, range, func):
     """Solve a standard eigenvalue problem."""
     dtype = numx.dtype(dtype)
     dim = 5
-    if range:
-        range = (2, dim -1)
-    else:
-        range = None
+    range = (2, dim -1) if range else None
     a = utils.symrand(dim, dtype)+numx.diag([2.1]*dim).astype(dtype)
     w,z = func(a, range=range)
     # assertions
@@ -28,10 +25,7 @@ def test_geneigenproblem(dtype, range, func):
     """Solve a generalized eigenvalue problem."""
     dtype = numx.dtype(dtype)
     dim = 5
-    if range:
-        range = (2, dim -1)
-    else:
-        range = None
+    range = (2, dim -1) if range else None
     a = utils.symrand(dim, dtype)
     b = utils.symrand(dim, dtype)+numx.diag([2.1]*dim).astype(dtype)
     w,z = func(a,b,range=range)

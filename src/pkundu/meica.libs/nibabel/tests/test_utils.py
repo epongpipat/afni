@@ -285,8 +285,7 @@ def test_a2f_big_scalers():
 def write_return(data, fileobj, out_dtype, *args, **kwargs):
     fileobj.truncate(0)
     array_to_file(data, fileobj, out_dtype, *args, **kwargs)
-    data = array_from_file(data.shape, out_dtype, fileobj)
-    return data
+    return array_from_file(data.shape, out_dtype, fileobj)
 
 
 def test_apply_scaling():

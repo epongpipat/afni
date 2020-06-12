@@ -65,10 +65,7 @@ def get_facs(AA):
 
 def calc_ratios(AA_h, AA_l):
     La = len(AA_h)
-    AA_rat = []
-    for i in range(La):
-        AA_rat.append( float(AA_h[i])/float(AA_l[i]) )
-    return AA_rat
+    return [float(AA_h[i])/float(AA_l[i]) for i in range(La)]
 
 def calc_rat_dist_from_gold(x):
     y = float(x)/GOLD

@@ -37,13 +37,13 @@ class LibSVMClassifier(_SVMClassifier):
         """
         if not params:
             params = {}
-        
+
         # initialise the parameter and be quiet
         self.parameter = libsvmutil.svm_parameter("-q")
         if probability:
             # allow for probability estimates
             self.parameter.probability = 1
-        
+
         super(LibSVMClassifier, self).__init__(input_dim=input_dim,
                                                output_dim=output_dim,
                                                dtype=dtype)
@@ -53,11 +53,11 @@ class LibSVMClassifier(_SVMClassifier):
             self.set_classifier(classifier)
         # set all other parameters
         for k, v in params.iteritems():
-            if not k in self.parameter._names:
+            if k not in self.parameter._names:
                 # check that the name is a valid parameter
                 msg = "'{}' is not a valid parameter for libsvm".format(k)
                 raise mdp.NodeException(msg)
-                
+
             if hasattr(self.parameter, k):
                 setattr(self.parameter, k, v)
             else:

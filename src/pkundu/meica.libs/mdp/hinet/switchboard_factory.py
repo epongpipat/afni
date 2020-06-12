@@ -53,10 +53,11 @@ class FactoryExtensionChannelSwitchboard(mdp.ExtensionNode,
         This template method checks the compatibility of the prev_switchboard
         and sanitizes '_xy' in free_params.
         """
-        compatible = False
-        for base_class in cls.compatible_pre_switchboards:
-            if isinstance(prev_switchboard, base_class):
-                compatible = True
+        compatible = any(
+            isinstance(prev_switchboard, base_class)
+            for base_class in cls.compatible_pre_switchboards
+        )
+
         if not compatible:
             err = ("The prev_switchboard class '%s'" %
                         prev_switchboard.__class__.__name__ +
@@ -93,7 +94,7 @@ class FactoryRectangular2dSwitchboard(FactoryExtensionChannelSwitchboard,
     def _get_switchboard_kwargs(free_params, prev_switchboard,
                                 prev_output_dim):
         in_channel_dim = (prev_output_dim // prev_switchboard.output_channels)
-        if not "ignore_cover" in free_params:
+        if "ignore_cover" not in free_params:
             free_params["ignore_cover"] = True
         return {"in_channels_xy": prev_switchboard.out_channels_xy,
                 "field_channels_xy": free_params["field_channels_xy"],
@@ -113,7 +114,7 @@ class FactoryDoubleRect2dSwitchboard(FactoryExtensionChannelSwitchboard,
     def _get_switchboard_kwargs(free_params, prev_switchboard,
                                 prev_output_dim):
         in_channel_dim = (prev_output_dim // prev_switchboard.output_channels)
-        if not "ignore_cover" in free_params:
+        if "ignore_cover" not in free_params:
             free_params["ignore_cover"] = True
         return {"in_channels_xy": prev_switchboard.out_channels_xy,
                 "field_channels_xy": free_params["field_channels_xy"],

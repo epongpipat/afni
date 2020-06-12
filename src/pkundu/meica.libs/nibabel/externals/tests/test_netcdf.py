@@ -51,15 +51,13 @@ def test_read_write_files():
         f = netcdf_file('simple.nc')
         # Using mmap is the default
         yield assert_true, f.use_mmap
-        for testargs in gen_for_simple(f):
-            yield testargs
+        yield from gen_for_simple(f)
         f.close()
         # Now without mmap
         f = netcdf_file('simple.nc', mmap=False)
         # Using mmap is the default
         yield assert_false, f.use_mmap
-        for testargs in gen_for_simple(f):
-            yield testargs
+        yield from gen_for_simple(f)
         f.close()
         # To read the NetCDF file we just created, as file object, no
         # mmap.  When n * n_bytes(var_type) is not divisible by 4, this
@@ -70,8 +68,7 @@ def test_read_write_files():
         f = netcdf_file(fobj)
         # by default, don't use mmap for file-like
         yield assert_false, f.use_mmap
-        for testargs in gen_for_simple(f):
-            yield testargs
+        yield from gen_for_simple(f)
         f.close()
     except:
         os.chdir(cwd)
@@ -88,8 +85,7 @@ def test_read_write_sio():
     f1.close()
     eg_sio2 = BytesIO(str_val)
     f2 = netcdf_file(eg_sio2)
-    for testargs in gen_for_simple(f2):
-        yield testargs
+    yield from gen_for_simple(f2)
     f2.close()
     # Test that error is raised if attempting mmap for sio
     eg_sio3 = BytesIO(str_val)
@@ -101,14 +97,12 @@ def test_read_write_sio():
     f_64.close()
     eg_sio_64 = BytesIO(str_val)
     f_64 = netcdf_file(eg_sio_64)
-    for testargs in gen_for_simple(f_64):
-        yield testargs
+    yield from gen_for_simple(f_64)
     yield assert_equal, f_64.version_byte, 2
     # also when version 2 explicitly specified
     eg_sio_64 = BytesIO(str_val)
     f_64 = netcdf_file(eg_sio_64, version=2)
-    for testargs in gen_for_simple(f_64):
-        yield testargs
+    yield from gen_for_simple(f_64)
     yield assert_equal, f_64.version_byte, 2
 
 

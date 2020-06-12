@@ -197,10 +197,7 @@ class Recoder(object):
         >>> rc.value_set('label') == set(('one', 'two', 'repeat value'))
         True
         '''
-        if name is None:
-            d = self.field1
-        else:
-            d = self.__dict__[name]
+        d = self.field1 if name is None else self.__dict__[name]
         return set(d.values())
 
 
@@ -345,7 +342,7 @@ def make_dt_codes(codes_seqs):
     '''
     fields=['code', 'label', 'type']
     len0 = len(codes_seqs[0])
-    if not len0 in (3,4):
+    if len0 not in (3, 4):
         raise ValueError('Sequences must be length 3 or 4')
     if len0 == 4:
         fields.append('niistring')
@@ -695,7 +692,7 @@ def write_zeros(fileobj, count, block_size=8194):
     nblocks = int(count // block_size)
     rem = count % block_size
     blk = ZEROB * block_size
-    for bno in range(nblocks):
+    for _ in range(nblocks):
         fileobj.write(blk)
     fileobj.write(ZEROB * rem)
 
@@ -894,7 +891,7 @@ def calculate_scale(data, out_dtype, allow_intercept):
     mn, mx = writer.finite_range()
     if (mn, mx) == (np.inf, -np.inf): # No valid data
         return (None, None, None, None)
-    if not in_dtype.kind in 'fc':
+    if in_dtype.kind not in 'fc':
         mn, mx = (None, None)
     return get_slope_inter(writer) + (mn, mx)
 
@@ -984,15 +981,9 @@ def scale_min_max(mn, mx, out_type, allow_intercept):
         if mn < 0 and mx > 0:
             raise ValueError('Cannot scale negative and positive '
                              'numbers to uint without intercept')
-        if mx < 0:
-            scaling = mn / type_max
-        else:
-            scaling = mx / type_max
+        scaling = mn / type_max if mx < 0 else mx / type_max
     else: # int
-        if abs(mx) >= abs(mn):
-            scaling = mx / type_max
-        else:
-            scaling = mn / type_min
+        scaling = mx / type_max if abs(mx) >= abs(mn) else mn / type_min
     return scaling, 0.0
 
 
@@ -1147,7 +1138,7 @@ def better_float_of(first, second, default=np.float32):
     second = np.dtype(second)
     default = np.dtype(default).type
     kinds = (first.kind, second.kind)
-    if not 'f' in kinds:
+    if 'f' not in kinds:
         return default
     if kinds == ('f', 'f'):
         if first.itemsize >= second.itemsize:
@@ -1163,7 +1154,7 @@ def _ftype4scaled_finite(tst_arr, slope, inter, direction='read',
     """ Smallest float type for scaling of `tst_arr` that does not overflow
     """
     assert direction in ('read', 'write')
-    if not default in OK_FLOATS and default is np.longdouble:
+    if default not in OK_FLOATS and default is np.longdouble:
         # Omitted longdouble
         return default
     def_ind = OK_FLOATS.index(default)
@@ -1274,9 +1265,7 @@ def allopen(fname, *args, **kwargs):
             kwargs['compresslevel'] = default_compresslevel
         opener = gzip.open
     elif fname.endswith('.bz2'):
-        if ('w' in mode and
-            len(args) < 3 and
-            not 'compresslevel' in kwargs):
+        if 'w' in mode and len(args) < 3 and 'compresslevel' not in kwargs:
             kwargs['compresslevel'] = default_compresslevel
         opener = bz2.BZ2File
     else:

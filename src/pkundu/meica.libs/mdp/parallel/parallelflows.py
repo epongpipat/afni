@@ -495,11 +495,11 @@ class ParallelFlow(mdp.Flow):
                            "second training phase, you probably "
                            "provided an iterator instead of an "
                            "iterable." % (self._i_train_node+1))
-                raise mdp.FlowException(err_str)
             else:
                 err_str = ("The training data iterator for node "
                            "no. %d is empty." % (self._i_train_node+1))
-                raise mdp.FlowException(err_str)
+
+            raise mdp.FlowException(err_str)
 
     def _post_stop_training_hook(self):
         """Hook method that is called after stop_training is called."""
@@ -560,10 +560,10 @@ class ParallelFlow(mdp.Flow):
         if execute_callable_class is None:
             execute_callable_class = FlowExecuteCallable
         # check that the scheduler is compatible
-        if overwrite_result_container:
-            if not isinstance(scheduler.result_container,
-                              ExecuteResultContainer):
-                scheduler.result_container = ExecuteResultContainer()
+        if overwrite_result_container and not isinstance(
+            scheduler.result_container, ExecuteResultContainer
+        ):
+            scheduler.result_container = ExecuteResultContainer()
         # do parallel execution
         self._flownode = FlowNode(mdp.Flow(self.flow))
         try:
@@ -750,10 +750,10 @@ class ParallelCheckpointFlow(ParallelFlow, mdp.CheckpointFlow):
         """Check if we reached a checkpoint."""
         super(ParallelCheckpointFlow, self)._post_stop_training_hook()
         i_node = self._i_train_node
-        if self.flow[i_node].get_remaining_train_phase() == 0:
-            if ((i_node <= len(self._checkpoints))
-                and self._checkpoints[i_node]):
-                dict = self._checkpoints[i_node](self.flow[i_node])
-                # store result, just like in the original CheckpointFlow
-                if dict:
-                    self.__dict__.update(dict)
+        if self.flow[i_node].get_remaining_train_phase() == 0 and (
+            (i_node <= len(self._checkpoints)) and self._checkpoints[i_node]
+        ):
+            dict = self._checkpoints[i_node](self.flow[i_node])
+            # store result, just like in the original CheckpointFlow
+            if dict:
+                self.__dict__.update(dict)

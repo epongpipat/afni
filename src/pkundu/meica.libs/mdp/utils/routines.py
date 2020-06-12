@@ -146,11 +146,10 @@ def cov2(x, y):
 def cov_maxima(cov):
     """Extract the maxima of a covariance matrix."""
     dim = cov.shape[0]
-    maxs = []
     if dim >= 1:
         cov=abs(cov)
         glob_max_idx = (cov.argmax()//dim, cov.argmax()%dim)
-        maxs.append(cov[glob_max_idx[0], glob_max_idx[1]])
+        maxs = [cov[glob_max_idx[0], glob_max_idx[1]]]
         cov_reduce = cov.copy()
         cov_reduce = cov_reduce[numx.arange(dim) != glob_max_idx[0], :]
         cov_reduce = cov_reduce[:, numx.arange(dim) != glob_max_idx[1]]
@@ -203,8 +202,11 @@ def get_dtypes(typecodes_key, _safe=True):
     for c in numx.typecodes[typecodes_key]:
         try:
             type_ = numx.dtype(c)
-            if (_safe and not mdp.config.has_symeig == 'scipy.linalg.eigh'
-                and type_ in _UNSAFE_DTYPES):
+            if (
+                _safe
+                and mdp.config.has_symeig != 'scipy.linalg.eigh'
+                and type_ in _UNSAFE_DTYPES
+            ):
                 continue
             types.append(type_)
         except TypeError:
@@ -237,8 +239,7 @@ def sqrtm(A):
 # replication functions
 def lrep(x, n):
     """Replicate x n-times on a new first dimension"""
-    shp = [1]
-    shp.extend(x.shape)
+    shp = [1, *x.shape]
     return x.reshape(shp).repeat(n, axis=0)
 
 def rrep(x, n):

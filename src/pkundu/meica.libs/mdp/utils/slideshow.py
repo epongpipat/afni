@@ -67,10 +67,7 @@ class HTMLSlideShow(templet.Template):
             slideshow per page.
         """
         # translate boolean variable into JS format
-        if loop:
-            loop = "true"
-        else:
-            loop = "false"
+        loop = "true" if loop else "false"
         if slideshow_id is None:
             slideshow_id = self._get_random_id()
         self.slideshow_id = slideshow_id

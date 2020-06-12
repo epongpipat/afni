@@ -287,10 +287,8 @@ def phase_estimator(amp_phase, phase_info):
                   number_of_slices=0)
     phasee.update(phase_info)
     if isinstance(phasee['phasee_list'], type([])):
-        return_phase_list = []
         for phasee_column in phasee['phasee_list']:
             return_phase.append(phase_base(amp_phase, phasee_column))
-        return return_phase_list
+        return []
     else:
-        return_phase = phase_base(amp_phase, phasee)
-        return return_phase
+        return phase_base(amp_phase, phasee)

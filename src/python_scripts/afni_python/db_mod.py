@@ -136,11 +136,8 @@ def apply_catenated_warps(proc, warp_list, base='', source='', prefix='',
       return 1, ''
 
    if NL:
-      if base: mstr = ' -master %s' % base
-      else:    mstr = ''
-      if dim > 0: dimstr = ' -dxyz %g' % dim
-      else:       dimstr = ''
-
+      mstr = ' -master %s' % base if base else ''
+      dimstr = ' -dxyz %g' % dim if dim > 0 else ''
       clist = ['3dNwarpApply%s%s \\\n' % (mstr, dimstr),
                '             -source %s \\\n'   % source,
                '             -nwarp %s \\\n'    % wstr]
@@ -150,13 +147,9 @@ def apply_catenated_warps(proc, warp_list, base='', source='', prefix='',
       clist.append('             -prefix %s\n' % prefix)
 
    else: # affine
-      if base: mstr = ' -base %s' % base
-      else:    mstr = ''
-      if dim > 0: dimstr = ' -mast_dxyz %g' % dim
-      else:       dimstr = ''
-      if NN: nstr = ' -final NN -quiet'
-      else:  nstr = ''
-
+      mstr = ' -base %s' % base if base else ''
+      dimstr = ' -mast_dxyz %g' % dim if dim > 0 else ''
+      nstr = ' -final NN -quiet' if NN else ''
       if dimstr or nstr:
          mastline = '            -mast_dxyz %g%s \\\n' % (dim, nstr)
       else:
@@ -182,68 +175,64 @@ def apply_catenated_warps(proc, warp_list, base='', source='', prefix='',
 
 # modify the tcat block options according to the user options
 def db_mod_tcat(block, proc, user_opts):
-    if len(block.opts.olist) == 0:    # then init to defaults
-        block.opts.add_opt('-tcat_remove_first_trs', 1, [0], setpar=1)
+   if len(block.opts.olist) == 0:    # then init to defaults
+       block.opts.add_opt('-tcat_remove_first_trs', 1, [0], setpar=1)
 
-    errs = 0
+   errs = 0
 
-    uopt = user_opts.find_opt('-tcat_remove_first_trs')
-    bopt = block.opts.find_opt('-tcat_remove_first_trs')
-    if uopt and bopt:
-      try: bopt.parlist = [int(param) for param in uopt.parlist]
-      except:
-          print("** ERROR: %s: invalid as integers: %s"   \
-                % (uopt.name, ' '.join(uopt.parlist)))
-          errs += 1
-      if errs == 0 and bopt.parlist[0] > 0:
-        print('** warning: removing first %d TRs from beginning of each run\n'\
-              '   --> the stimulus timing files must reflect the '            \
-              'removal of these TRs' % bopt.parlist[0])
+   uopt = user_opts.find_opt('-tcat_remove_first_trs')
+   bopt = block.opts.find_opt('-tcat_remove_first_trs')
+   if uopt and bopt:
+     try: bopt.parlist = [int(param) for param in uopt.parlist]
+     except:
+         print("** ERROR: %s: invalid as integers: %s"   \
+               % (uopt.name, ' '.join(uopt.parlist)))
+         errs += 1
+     if errs == 0 and bopt.parlist[0] > 0:
+       print('** warning: removing first %d TRs from beginning of each run\n'\
+             '   --> the stimulus timing files must reflect the '            \
+             'removal of these TRs' % bopt.parlist[0])
 
-    apply_uopt_to_block('-tcat_remove_last_trs', user_opts, block)
-    apply_uopt_to_block('-tcat_preSS_warn_limit', user_opts, block)
+   apply_uopt_to_block('-tcat_remove_last_trs', user_opts, block)
+   apply_uopt_to_block('-tcat_preSS_warn_limit', user_opts, block)
 
-    if errs == 0: block.valid = 1
-    else        : block.valid = 0
+   block.valid = 1 if errs == 0 else 0
 
 # do not rely on the form of input filenames
 # use 3dtcat to copy each file to od_var, then 'cd' into it
 def db_cmd_tcat(proc, block):
-    cmd = ''
-    opt = block.opts.find_opt('-tcat_remove_first_trs')
-    flist = opt.parlist
-    first = opt.parlist[0]
+   cmd = ''
+   opt = block.opts.find_opt('-tcat_remove_first_trs')
+   flist = opt.parlist
+   first = opt.parlist[0]
     # if multiple runs, length of flist should match
-    if proc.runs > 1:
-       if len(flist) == 1:
-          flist = [first for r in range(proc.runs)]
+   if proc.runs > 1 and len(flist) == 1:
+      flist = [first for r in range(proc.runs)]
 
-    if len(flist) != proc.runs:
-       print('** error: -tcat_remove_first_trs takes either 1 value or nruns')
-       return 1, ''
+   if len(flist) != proc.runs:
+      print('** error: -tcat_remove_first_trs takes either 1 value or nruns')
+      return 1, ''
 
-    # maybe the user updated our warning limit
-    val, err = block.opts.get_type_opt(float, '-tcat_preSS_warn_limit')
-    if err: return 1, ''
-    if val != None:
-       if val < 0.0 or val > 1.0:
-          print('** -tcat_preSS_warn_limit: limit %s outside [0,1.0]' % val)
-          return 1, ''
-       proc.out_ss_lim = val
+   # maybe the user updated our warning limit
+   val, err = block.opts.get_type_opt(float, '-tcat_preSS_warn_limit')
+   if err: return 1, ''
+   if val != None:
+      if val < 0.0 or val > 1.0:
+         print('** -tcat_preSS_warn_limit: limit %s outside [0,1.0]' % val)
+         return 1, ''
+      proc.out_ss_lim = val
 
-    # remove the last TRs?  set rmlast
-    val, err = proc.user_opts.get_type_opt(int, '-tcat_remove_last_trs')
-    if err: return 1, ''
-    if val == None: rmlast = 0
-    else: rmlast = val
-
-    cmd = cmd + "# %s\n"                                                \
+   # remove the last TRs?  set rmlast
+   val, err = proc.user_opts.get_type_opt(int, '-tcat_remove_last_trs')
+   if err: return 1, ''
+   rmlast = 0 if val is None else val
+   cmd += "# %s\n"                                                \
                 "# apply 3dTcat to copy input dsets to results dir,\n"  \
                 "# while removing the first %d TRs\n"                   \
                 % (block_header('auto block: tcat'), first)
 
     # we might need to process multiple echoes
-    for eind in range(proc.num_echo):
+   for eind in range(proc.num_echo):
       if proc.have_me:
          if (eind+1) == proc.reg_echo:
             estr = '(fave_echo = registration driver)'
@@ -252,57 +241,55 @@ def db_cmd_tcat(proc, block):
          cmd += '\n# EPI runs for echo %d %s\n' % (eind+1, estr)
 
       for run in range(proc.runs):
-        if rmlast == 0: final = '$'
-        else:
+         if rmlast == 0: final = '$'
+         else:
             reps = proc.reps_all[run]
             final = '%d' % (reps-rmlast-1)
-            if reps-rmlast-1 < 0:
-                print('** run %d: have %d reps, cannot remove %d!' \
-                      % (run+1, reps, rmlast))
-                return 1, ''
-        # ME: set output name
-        if proc.have_me: pre_form = proc.prefix_form(block,run+1,eind=(eind+1))
-        else:            pre_form = proc.prefix_form(block,run+1)
-        # ME: set input name
-        if proc.have_me: dset = proc.dsets_me[eind][run]
-        else:            dset = proc.dsets[run]
-
-        cmd = cmd + "3dTcat -prefix %s/%s %s'[%d..%s]'\n" %              \
+            if reps - rmlast < 1:
+               print('** run %d: have %d reps, cannot remove %d!' \
+                     % (run+1, reps, rmlast))
+               return 1, ''
+         # ME: set output name
+         if proc.have_me: pre_form = proc.prefix_form(block,run+1,eind=(eind+1))
+         else:            pre_form = proc.prefix_form(block,run+1)
+                 # ME: set input name
+         dset = proc.dsets_me[eind][run] if proc.have_me else proc.dsets[run]
+         cmd += "3dTcat -prefix %s/%s %s'[%d..%s]'\n" %              \
                     (proc.od_var, pre_form, dset.rel_input(), flist[run], final)
       if proc.have_me: cmd += '\n'
 
-    proc.reps   -= first+rmlast # update reps to account for removed TRs
-    if proc.verb > 0:
-       print("-- %s: reps is now %d" % (block.label, proc.reps))
-       if proc.have_me:
-          print("-- multi-echo data: have %d echoes across %d run(s)" \
-                % (len(proc.dsets_me), len(proc.dsets)))
+   proc.reps   -= first+rmlast # update reps to account for removed TRs
+   if proc.verb > 0:
+      print("-- %s: reps is now %d" % (block.label, proc.reps))
+      if proc.have_me:
+         print("-- multi-echo data: have %d echoes across %d run(s)" \
+               % (len(proc.dsets_me), len(proc.dsets)))
 
-    for run in range(len(proc.reps_all)):
-       proc.reps_all[run] -= (flist[run] + rmlast)
-    if not UTIL.vals_are_constant(proc.reps_all):
-       proc.reps_vary = 1
+   for run in range(len(proc.reps_all)):
+      proc.reps_all[run] -= (flist[run] + rmlast)
+   if not UTIL.vals_are_constant(proc.reps_all):
+      proc.reps_vary = 1
 
-    # now we are ready to set polort for the analysis
-    if set_proc_polort(proc): return
+   # now we are ready to set polort for the analysis
+   if set_proc_polort(proc): return
 
-    cmd = cmd + '\n'                                                    \
+   cmd += '\n'                                                    \
                 '# and make note of repetitions (TRs) per run\n'        \
                 'set tr_counts = ( %s )\n'%UTIL.int_list_string(proc.reps_all)
 
-    cmd = cmd + '\n'                                                          \
+   cmd += '\n'                                                          \
                 '# -------------------------------------------------------\n' \
                 '# enter the results directory (can begin processing data)\n' \
                 'cd %s\n\n\n' % proc.od_var
 
-    tcat_extract_vr_base(proc)
+   tcat_extract_vr_base(proc)
 
-    if proc.blip_in_rev != None and proc.blip_in_for == None:
-       rv, tcmd = tcat_make_blip_in_for(proc, block)
-       if rv: return 1, ''
-       if tcmd != '': cmd += tcmd
+   if proc.blip_in_rev != None and proc.blip_in_for is None:
+      rv, tcmd = tcat_make_blip_in_for(proc, block)
+      if rv: return 1, ''
+      if tcmd != '': cmd += tcmd
 
-    return cmd
+   return cmd
 
 def tcat_make_blip_in_for(proc, block):
     """copy a number of time points from first tcat output that
@@ -371,41 +358,40 @@ def set_proc_polort(proc):
     return 0
 
 def tcat_extract_vr_base(proc):
-    """find volreb block
+   """find volreb block
        get block.opts.find_opt('-volreg_base_ind') and indices
        if necessary,
     """
 
-    # everything should exist, if the volreg block does
-    block = proc.find_block('volreg')
-    if not block: return
+   # everything should exist, if the volreg block does
+   block = proc.find_block('volreg')
+   if not block: return
 
-    # if we have an external base, nothing to do
-    if proc.vr_ext_base: return
+   # if we have an external base, nothing to do
+   if proc.vr_ext_base: return
 
     # already set if MIN_OUTLIER
-    if proc.vr_int_name == '':
-       bopt = block.opts.find_opt('-volreg_base_ind')
-       if not bopt:
-          print('** TEVB: no vr_int_name, no volreg_base_ind')
-          return
+   if proc.vr_int_name == '':
+      bopt = block.opts.find_opt('-volreg_base_ind')
+      if not bopt:
+         print('** TEVB: no vr_int_name, no volreg_base_ind')
+         return
 
-       run = bopt.parlist[0]+1
-       ind = bopt.parlist[1]
+      run = bopt.parlist[0]+1
+      ind = bopt.parlist[1]
 
        # if negative, then 'last', and we need to re-extract run and index
-       if run <= 0 or ind < 0:
-          run = proc.runs
-          if proc.reps_vary: ind = proc.reps_all[-1] - 1
-          else:              ind = proc.reps - 1
-          if proc.verb > 2:
-             print('++ TEVB: updating run/index to %d, %d' % (run, ind))
+      if run <= 0 or ind < 0:
+         run = proc.runs
+         ind = proc.reps_all[-1] - 1 if proc.reps_vary else proc.reps - 1
+         if proc.verb > 2:
+            print('++ TEVB: updating run/index to %d, %d' % (run, ind))
 
-       set_vr_int_name(block, proc, 'vr_base', runstr='%02d'%run,
-                                               trstr='"[%d]"'%ind)
+      set_vr_int_name(block, proc, 'vr_base', runstr='%02d'%run,
+                                              trstr='"[%d]"'%ind)
 
-    # if we are extracting an internal volreg base (min outlier or index),
-    extract_registration_base(block, proc)
+   # if we are extracting an internal volreg base (min outlier or index),
+   extract_registration_base(block, proc)
 
 
 def extract_registration_base(block, proc, prefix=''):
@@ -446,68 +432,67 @@ def extract_registration_base(block, proc, prefix=''):
 
 # modify the tcat block options according to the user options
 def db_mod_postdata(block, proc, user_opts):
-    """This block is for initial processing before anything that
+   """This block is for initial processing before anything that
        affects the EPI data.
        This block will probably never get named options.
     """
 
-    # note other anat followers (-anat_follower*)
-    if apply_general_anat_followers(proc): return
+   # note other anat followers (-anat_follower*)
+   if apply_general_anat_followers(proc): return
 
-    if len(block.opts.olist) == 0: pass
-    block.valid = 1
+   block.valid = 1
 
 def db_cmd_postdata(proc, block):
-    """add any sub-blocks with their own headers"""
+   """add any sub-blocks with their own headers"""
 
-    cmd = ''
+   cmd = ''
 
-    # consider applying a uniformity correction
-    umeth, rv = proc.user_opts.get_string_opt('-anat_uniform_method',
-                                              default='default')
-    proc.anat_unif_meth = umeth # store for later
-    if umeth == 'unifize' and proc.anat:
-       rv, oc = make_uniformity_commands(proc, umeth)
-       if rv: return   # failure (error has been printed)
-       cmd = cmd + oc
+   # consider applying a uniformity correction
+   umeth, rv = proc.user_opts.get_string_opt('-anat_uniform_method',
+                                             default='default')
+   proc.anat_unif_meth = umeth # store for later
+   if umeth == 'unifize' and proc.anat:
+      rv, oc = make_uniformity_commands(proc, umeth)
+      if rv: return   # failure (error has been printed)
+      cmd += oc
 
     # probaby get outlier fractions
-    if proc.user_opts.have_yes_opt('-outlier_count', default=1) and \
+   if proc.user_opts.have_yes_opt('-outlier_count', default=1) and \
             proc.reps_all[0] > 5:
-        rv, oc = make_outlier_commands(proc, block)
-        if rv: return   # failure (error has been printed)
-        cmd = cmd + oc
+      rv, oc = make_outlier_commands(proc, block)
+      if rv: return   # failure (error has been printed)
+      cmd += oc
 
     # possibly get @radial_correlate command
-    if proc.user_opts.have_yes_opt('-radial_correlate', default=0) and \
+   if proc.user_opts.have_yes_opt('-radial_correlate', default=0) and \
             proc.reps_all[0] > 5:
-        rv, oc = run_radial_correlate(proc, block)
-        if rv: return   # failure (error has been printed)
-        cmd = cmd + oc
+      rv, oc = run_radial_correlate(proc, block)
+      if rv: return   # failure (error has been printed)
+      cmd += oc
 
     # add anat to anat followers?
-    if proc.anat_has_skull:
-       if proc.find_block('align') or proc.find_block('tlrc'):
-          # add anat to own follower list (we are now after 3dcopy)
-          # (no existence check)
-          ff = proc.add_anat_follower(aname=proc.anat, dgrid='anat',
-                                      label='anat_w_skull', check=0)
-          ff.set_var('final_prefix', 'anat_w_skull_warped')
+   if proc.anat_has_skull and (proc.find_block('align')
+                               or proc.find_block('tlrc')):
+      # add anat to own follower list (we are now after 3dcopy)
+      # (no existence check)
+      ff = proc.add_anat_follower(aname=proc.anat, dgrid='anat',
+                                  label='anat_w_skull', check=0)
+      ff.set_var('final_prefix', 'anat_w_skull_warped')
 
-    # ---------------
-    # if requested, create any anat followers
-    if should_warp_anat_followers(proc, block):
-       rv, tcmd = warp_anat_followers(proc, block, proc.anat, prevepi=1)
-       if rv: return
-       if tcmd: cmd += tcmd
+   # ---------------
+   # if requested, create any anat followers
+   if should_warp_anat_followers(proc, block):
+      rv, tcmd = warp_anat_followers(proc, block, proc.anat, prevepi=1)
+      if rv: return
+      if tcmd: cmd += tcmd
 
-    return cmd
+   return cmd
 
 def apply_general_anat_followers(proc):
    # add any other anat follower datasets
 
    elist, rv = proc.user_opts.get_string_list('-anat_follower_erode')
-   if elist == None: elist = []
+   if elist is None: elist = []
    for oname in ['-anat_follower', '-anat_follower_ROI' ]:
 
       for opt in proc.user_opts.find_all_opts(oname):
@@ -523,7 +508,7 @@ def apply_general_anat_followers(proc):
             ff = proc.add_anat_follower(name=dname, dgrid=dgrid, label=label)
             flab = 'follow_anat'
 
-         if ff == None:
+         if ff is None:
             print('** failed to add follower %s' % dname)
             return 1
 
@@ -690,26 +675,26 @@ def run_radial_correlate(proc, block):
     return 0, cmd
 
 def combine_censor_files(proc, cfile, newfile=''):
-    """create a 1deval command to multiply the 2 current censor file
+   """create a 1deval command to multiply the 2 current censor file
        with the existing one, writing to newfile
 
        store newfile as censor_file
 
        return err, cmd_str   (where err=0 implies success)"""
 
-    if not newfile:
-        newfile = 'censor_${subj}_combined_%d.1D' % (proc.censor_count+1)
-    if not proc.censor_file or not cfile:
-        print('** combine_censor_files: missing input')
-        return 1, ''
-    cstr = '# combine multiple censor files\n'          \
-           '1deval -a %s -b %s \\\n'                    \
-           '       -expr "a*b" > %s\n'                  \
-           % (cfile, proc.censor_file, newfile)
-    proc.censor_file = newfile
-    proc.censor_count += 1
+   if not newfile:
+       newfile = 'censor_${subj}_combined_%d.1D' % (proc.censor_count+1)
+   if not (proc.censor_file and cfile):
+      print('** combine_censor_files: missing input')
+      return 1, ''
+   cstr = '# combine multiple censor files\n'          \
+          '1deval -a %s -b %s \\\n'                    \
+          '       -expr "a*b" > %s\n'                  \
+          % (cfile, proc.censor_file, newfile)
+   proc.censor_file = newfile
+   proc.censor_count += 1
 
-    return 0, cstr
+   return 0, cstr
 
 # --------------- blip block ---------------
 
@@ -924,9 +909,8 @@ def dset_is_oblique(aname, verb):
       print('== dset_is_oblique cmd: %s' % cmd)
       print('       so = %s, se = %s' % (so, se))
 
-   if len(so) < 1:    return 0
-   elif so[0] == '1': return 1
-   else:              return 0
+   if len(so) < 1 or so[0] != '1':    return 0
+   else: return 1
 
 def blip_warp_command(proc, warp, source, prefix, interp=' -quintic',
                       oblset=None, indent=''):
@@ -950,112 +934,111 @@ def blip_warp_command(proc, warp, source, prefix, interp=' -quintic',
 # --------------- align (anat2epi) ---------------
 
 def db_mod_align(block, proc, user_opts):
-    if len(block.opts.olist) == 0:    # then init to defaults
-        block.opts.add_opt('-align_opts_aea', -1, [])
-        block.opts.add_opt('-align_epi_strip_method', 1, ['3dAutomask'],
-                           setpar=1)
+   if len(block.opts.olist) == 0:    # then init to defaults
+       block.opts.add_opt('-align_opts_aea', -1, [])
+       block.opts.add_opt('-align_epi_strip_method', 1, ['3dAutomask'],
+                          setpar=1)
 
-    # general options for align_epi_anat.py
-    uopt = user_opts.find_opt('-align_opts_aea')
-    bopt = block.opts.find_opt('-align_opts_aea')
-    if uopt and bopt: bopt.parlist = uopt.parlist
+   # general options for align_epi_anat.py
+   uopt = user_opts.find_opt('-align_opts_aea')
+   bopt = block.opts.find_opt('-align_opts_aea')
+   if uopt and bopt: bopt.parlist = uopt.parlist
 
-    # external EPI volume for align_epi_anat.py
-    uopt = user_opts.find_opt('-align_epi_ext_dset')
-    bopt = block.opts.find_opt('-align_epi_ext_dset')
-    if uopt and not bopt:
-        block.opts.add_opt('-align_epi_ext_dset', 1, uopt.parlist, setpar=1)
-    elif uopt and bopt: bopt.parlist = uopt.parlist
+   # external EPI volume for align_epi_anat.py
+   uopt = user_opts.find_opt('-align_epi_ext_dset')
+   bopt = block.opts.find_opt('-align_epi_ext_dset')
+   if uopt and not bopt:
+      block.opts.add_opt('-align_epi_ext_dset', 1, uopt.parlist, setpar=1)
+   elif uopt: bopt.parlist = uopt.parlist
 
-    # check base_dset (do not allow with selector options)
-    bopt = block.opts.find_opt('-align_epi_ext_dset')
-    if bopt: proc.align_ebase = bopt.parlist[0]
+   # check base_dset (do not allow with selector options)
+   bopt = block.opts.find_opt('-align_epi_ext_dset')
+   if bopt: proc.align_ebase = bopt.parlist[0]
 
-    # maybe adjust EPI skull stripping method
-    apply_uopt_to_block('-align_epi_strip_method', user_opts, block)
-    apply_uopt_to_block('-align_unifize_epi', user_opts, block)
+   # maybe adjust EPI skull stripping method
+   apply_uopt_to_block('-align_epi_strip_method', user_opts, block)
+   apply_uopt_to_block('-align_unifize_epi', user_opts, block)
 
-    block.valid = 1
+   block.valid = 1
 
 # align anat to epi -> anat gets _al suffix to its prefix
 #                   -> matrix is ${anat_prefix}_al.mat.aff12.1D
 # (adjust prefix of proc.anat and proc.tlrcanat)
 # set a2e xform matrix
 def db_cmd_align(proc, block):
-    if not proc.anat:
-        print('** ERROR: missing anat for align block (consider -copy_anat)\n')
-        return
+   if not proc.anat:
+       print('** ERROR: missing anat for align block (consider -copy_anat)\n')
+       return
 
-    # first note EPI alignment base and sub-brick, as done in volreg block
-    # (alignEA EPI and base might be given externally via -align_epi_base_dset)
-    if proc.align_ebase != None:
-        basevol = "%s%s" % (proc.align_epre,proc.view)
-        bind = 0
-    elif proc.vr_ext_base != None or proc.vr_int_name != '':
-        basevol = "%s%s" % (proc.vr_ext_pre,proc.view)
-        bind = 0
-    else:
-        rind, bind = proc.get_vr_base_indices()
-        if rind < 0:
-            rind, bind = 0, 0
-            print('** warning: will use align base defaults: %d, %d'%(rind,bind))
-            # return (allow as success now, for no volreg block)
-        basevol = proc.prev_prefix_form(rind+1, block, view=1)
+   # first note EPI alignment base and sub-brick, as done in volreg block
+   # (alignEA EPI and base might be given externally via -align_epi_base_dset)
+   if proc.align_ebase != None:
+       basevol = "%s%s" % (proc.align_epre,proc.view)
+       bind = 0
+   elif proc.vr_ext_base != None or proc.vr_int_name != '':
+       basevol = "%s%s" % (proc.vr_ext_pre,proc.view)
+       bind = 0
+   else:
+       rind, bind = proc.get_vr_base_indices()
+       if rind < 0:
+           rind, bind = 0, 0
+           print('** warning: will use align base defaults: %d, %d'%(rind,bind))
+           # return (allow as success now, for no volreg block)
+       basevol = proc.prev_prefix_form(rind+1, block, view=1)
 
-    # should we unifize EPI?  if so, basevol becomes result
-    ucmd = ''
-    if block.opts.have_yes_opt('-align_unifize_epi', default=0):
-       epi_in = BASE.afni_name(basevol)
-       epi_out = epi_in.new(new_pref=('%s_unif' % epi_in.prefix))
-       basevol = epi_out.shortinput()
-       ucmd = '# run uniformity correction on EPI base\n' \
-              '3dUnifize -T2 -input %s -prefix %s\n\n'    \
-              % (epi_in.shortinput(), epi_out.out_prefix())
+   # should we unifize EPI?  if so, basevol becomes result
+   ucmd = ''
+   if block.opts.have_yes_opt('-align_unifize_epi', default=0):
+      epi_in = BASE.afni_name(basevol)
+      epi_out = epi_in.new(new_pref=('%s_unif' % epi_in.prefix))
+      basevol = epi_out.shortinput()
+      ucmd = '# run uniformity correction on EPI base\n' \
+             '3dUnifize -T2 -input %s -prefix %s\n\n'    \
+             % (epi_in.shortinput(), epi_out.out_prefix())
 
-    # check for EPI skull strip method
-    opt = block.opts.find_opt('-align_epi_strip_method')
-    if opt and opt.parlist: essopt = "       -epi_strip %s \\\n"%opt.parlist[0]
-    else:                   essopt = ""
+   # check for EPI skull strip method
+   opt = block.opts.find_opt('-align_epi_strip_method')
+   if opt and opt.parlist: essopt = "       -epi_strip %s \\\n"%opt.parlist[0]
+   else:                   essopt = ""
 
-    # add any user-specified options
-    opt = block.opts.find_opt('-align_opts_aea')
-    if opt and opt.parlist: extra_opts = "       %s \\\n" % \
-                            ' '.join(UTIL.quotize_list(opt.parlist, '', 1))
-    else:   extra_opts = ''
+   # add any user-specified options
+   opt = block.opts.find_opt('-align_opts_aea')
+   if opt and opt.parlist: extra_opts = "       %s \\\n" % \
+                           ' '.join(UTIL.quotize_list(opt.parlist, '', 1))
+   else:   extra_opts = ''
 
-    has_skull = proc.anat_has_skull
-    if has_skull: ss_opt = ''
-    else:         ss_opt = '       -anat_has_skull no \\\n'
-    # also, check for a user opt that specifies it
-    if extra_opts.find('-anat_has_skull no') >= 0:
-       has_skull = 0
-       proc.anat_has_skull = 0
-       ss_opt = ''      # user already passing it
+   has_skull = proc.anat_has_skull
+   ss_opt = '' if has_skull else '       -anat_has_skull no \\\n'
+   # also, check for a user opt that specifies it
+   if extra_opts.find('-anat_has_skull no') >= 0:
+      has_skull = 0
+      proc.anat_has_skull = 0
+      ss_opt = ''      # user already passing it
 
-    # note whether the aea output is expected to be used
-    e2a = (proc.find_block_opt('volreg', '-volreg_align_e2a') != None)
-    astr   = '' # maybe to save skullstrip dset
-    if e2a: # if the option was passed, the output is junk
-        suffix = '_al_junk'
-        if has_skull: astr='-save_skullstrip '
-    else:   # otherwise, we will use it
-        suffix = '_al_keep'
+   # note whether the aea output is expected to be used
+   e2a = (proc.find_block_opt('volreg', '-volreg_align_e2a') != None)
+   astr   = '' # maybe to save skullstrip dset
+   if e2a: # if the option was passed, the output is junk
+       suffix = '_al_junk'
+       if has_skull: astr='-save_skullstrip '
+   else:   # otherwise, we will use it
+       suffix = '_al_keep'
 
-    # write main command, write hdr after anat update
-    cmd = 'align_epi_anat.py -anat2epi -anat %s \\\n'             \
-          '       %s-suffix %s \\\n'                              \
-          '       -epi %s -epi_base %d \\\n'                      \
-          '%s'                                                    \
-          '%s'                                                    \
-          '%s'                                                    \
-          '       -volreg off -tshift off\n\n'                    \
-          % (proc.anat.pv(), astr, suffix, basevol, bind, essopt, ss_opt,
-             extra_opts)
+   # write main command, write hdr after anat update
+   cmd = 'align_epi_anat.py -anat2epi -anat %s \\\n'             \
+         '       %s-suffix %s \\\n'                              \
+         '       -epi %s -epi_base %d \\\n'                      \
+         '%s'                                                    \
+         '%s'                                                    \
+         '%s'                                                    \
+         '       -volreg off -tshift off\n\n'                    \
+         % (proc.anat.pv(), astr, suffix, basevol, bind, essopt, ss_opt,
+            extra_opts)
 
-    # store the alignment matrix file for possible later use
-    proc.a2e_mat = "%s%s_mat.aff12.1D" % (proc.anat.prefix, suffix)
-    if not e2a: # store xform file
-        proc.anat_warps.append(proc.a2e_mat)
+   # store the alignment matrix file for possible later use
+   proc.a2e_mat = "%s%s_mat.aff12.1D" % (proc.anat.prefix, suffix)
+   if not e2a: # store xform file
+       proc.anat_warps.append(proc.a2e_mat)
 
 
     # if e2a:   update anat and tlrc to '_ss' version (intermediate, stripped)
@@ -1063,51 +1046,49 @@ def db_cmd_align(proc, block):
     #           (not if using adwarp)
     # else a2e: update anat and tlrc to 'keep' version
     # (in either case, ss will no longer be needed)
-    if e2a:
-        adwarp = (proc.find_block_opt('volreg', '-volreg_tlrc_adwarp') != None)
-        if has_skull and not adwarp:
-            suffix = '_ns'
-            proc.anat.prefix = "%s%s" % (proc.anat.prefix, suffix)
-            if proc.tlrcanat:
-                if not proc.tlrcanat.exist():
-                   proc.tlrcanat.prefix = "%s%s" % (proc.tlrcanat.prefix, suffix)
-            proc.tlrc_ss = 0
-            proc.anat_has_skull = 0     # make note that skull is gone
-            istr = 'intermediate, stripped,'
-        else: # just set istr
-            istr = 'current'
-        astr = 'for e2a: compute anat alignment transformation'
-    else: # a2e
-        proc.anat.prefix = "%s%s" % (proc.anat.prefix, suffix)
-        if proc.tlrcanat:
-            if not proc.tlrcanat.exist():
-               proc.tlrcanat.prefix = "%s%s" % (proc.tlrcanat.prefix, suffix)
-        proc.tlrc_ss = 0        # skull-strip no longer required
-        proc.anat_has_skull = 0 # make note that skull is gone
+   if e2a:
+      adwarp = (proc.find_block_opt('volreg', '-volreg_tlrc_adwarp') != None)
+      if has_skull and not adwarp:
+         suffix = '_ns'
+         proc.anat.prefix = "%s%s" % (proc.anat.prefix, suffix)
+         if proc.tlrcanat and not proc.tlrcanat.exist():
+            proc.tlrcanat.prefix = "%s%s" % (proc.tlrcanat.prefix, suffix)
+         proc.tlrc_ss = 0
+         proc.anat_has_skull = 0     # make note that skull is gone
+         istr = 'intermediate, stripped,'
+      else: # just set istr
+         istr = 'current'
+      astr = 'for e2a: compute anat alignment transformation'
+   else: # a2e
+      proc.anat.prefix = "%s%s" % (proc.anat.prefix, suffix)
+      if proc.tlrcanat and not proc.tlrcanat.exist():
+         proc.tlrcanat.prefix = "%s%s" % (proc.tlrcanat.prefix, suffix)
+      proc.tlrc_ss = 0        # skull-strip no longer required
+      proc.anat_has_skull = 0 # make note that skull is gone
 
-        # also, set strings for header
-        istr = 'aligned and stripped,'
-        astr = 'a2e: align anatomy'
+      # also, set strings for header
+      istr = 'aligned and stripped,'
+      astr = 'a2e: align anatomy'
 
-    # now that proc.anat has been updated, write header, still depending
-    # on e2a or a2e direction
-    hdr = '# %s\n'                              \
-          '# %s to EPI registration base\n'     \
-          '# (new anat will be %s %s)\n'        \
-          % (block_header('align'), astr, istr, proc.anat.pv())
+   # now that proc.anat has been updated, write header, still depending
+   # on e2a or a2e direction
+   hdr = '# %s\n'                              \
+         '# %s to EPI registration base\n'     \
+         '# (new anat will be %s %s)\n'        \
+         % (block_header('align'), astr, istr, proc.anat.pv())
 
-    # ---------------
-    # if requested, create any anat followers
-    if should_warp_anat_followers(proc, block):
-        rv, tcmd = warp_anat_followers(proc, block, proc.anat, prevepi=1)
-        if rv: return
-        if tcmd: cmd += tcmd
+   # ---------------
+   # if requested, create any anat followers
+   if should_warp_anat_followers(proc, block):
+       rv, tcmd = warp_anat_followers(proc, block, proc.anat, prevepi=1)
+       if rv: return
+       if tcmd: cmd += tcmd
 
-    # used 3dvolreg, so have these labels
-    # note the alignment in EPIs warp bitmap (2=a2e)
-    proc.warp_epi |= WARP_EPI_ALIGN_A2E
+   # used 3dvolreg, so have these labels
+   # note the alignment in EPIs warp bitmap (2=a2e)
+   proc.warp_epi |= WARP_EPI_ALIGN_A2E
 
-    return hdr + ucmd + cmd
+   return hdr + ucmd + cmd
 
 # --------------- despike ---------------
 
@@ -1179,39 +1160,37 @@ def db_cmd_despike(proc, block):
 
 # copy regs is call from init_script, after all db_mod functions
 def copy_ricor_regs_str(proc):
-    """make a string to copy the retroicor regressors to the results dir"""
-    if len(proc.ricor_regs) < 1: return ''
+   """make a string to copy the retroicor regressors to the results dir"""
+   if len(proc.ricor_regs) < 1: return ''
 
-    # maybe remove final TRs as well, do a little work here...
-    trs = []
-    lstr = ''
-    if proc.ricor_nlast > 0:
-        try:
-            import lib_afni1D as LAD
-            for reg in proc.ricor_regs:
-                adata = LAD.Afni1D(reg)
-                trs.append(adata.nt)
-        except:
-            print('** failing to remove last %d TRs' % proc.ricor_nlast)
-            return ''
-        lstr = 'and last %d' % proc.ricor_nlast
+   # maybe remove final TRs as well, do a little work here...
+   trs = []
+   lstr = ''
+   if proc.ricor_nlast > 0:
+       try:
+           import lib_afni1D as LAD
+           for reg in proc.ricor_regs:
+               adata = LAD.Afni1D(reg)
+               trs.append(adata.nt)
+       except:
+           print('** failing to remove last %d TRs' % proc.ricor_nlast)
+           return ''
+       lstr = 'and last %d' % proc.ricor_nlast
 
-    str = '# copy slice-based regressors for RETROICOR (rm first %d %sTRs)\n' \
-          % (proc.ricor_nfirst, lstr)
+   str = '# copy slice-based regressors for RETROICOR (rm first %d %sTRs)\n' \
+         % (proc.ricor_nfirst, lstr)
 
-    if proc.ricor_nfirst > 0: offstr = "'{%d..$}'" % proc.ricor_nfirst
-    else:                     offstr = ''
+   offstr = "'{%d..$}'" % proc.ricor_nfirst if proc.ricor_nfirst > 0 else ''
+   offstr = ''         # default
+   lstr   = '$'
+   for ind in range(len(proc.ricor_regs)):
+       if proc.ricor_nfirst > 0 or proc.ricor_nlast > 0:
+           if proc.ricor_nlast > 0: lstr = '%d' % (trs[ind]-1-proc.ricor_nlast)
+           offstr = "'{%d..%s}'" % (proc.ricor_nfirst, lstr)
+       str += '1dcat %s%s > %s/stimuli/ricor_orig_r%02d.1D\n' % \
+              (proc.ricor_regs[ind], offstr, proc.od_var, ind+1)
 
-    offstr = ''         # default
-    lstr   = '$'
-    for ind in range(len(proc.ricor_regs)):
-        if proc.ricor_nfirst > 0 or proc.ricor_nlast > 0:
-            if proc.ricor_nlast > 0: lstr = '%d' % (trs[ind]-1-proc.ricor_nlast)
-            offstr = "'{%d..%s}'" % (proc.ricor_nfirst, lstr)
-        str += '1dcat %s%s > %s/stimuli/ricor_orig_r%02d.1D\n' % \
-               (proc.ricor_regs[ind], offstr, proc.od_var, ind+1)
-
-    return str
+   return str
 
 # options:
 #
@@ -1594,47 +1573,45 @@ def db_mod_tshift(block, proc, user_opts):
 
 # run 3dTshift for each run
 def db_cmd_tshift(proc, block):
-    cmd = ''
-    # get the base options
-    opt = block.opts.find_opt('-tshift_align_to')
-    align_to = ' '.join(opt.parlist)  # maybe '-tzero 0'
-    opt = block.opts.find_opt('-tshift_interp')
-    resam = ' '.join(opt.parlist)     # maybe '-quintic'
+   cmd = ''
+   # get the base options
+   opt = block.opts.find_opt('-tshift_align_to')
+   align_to = ' '.join(opt.parlist)  # maybe '-tzero 0'
+   opt = block.opts.find_opt('-tshift_interp')
+   resam = ' '.join(opt.parlist)     # maybe '-quintic'
 
-    # note cur and prev prefix forms (with $run)
-    cur_prefix = proc.prefix_form_run(block)
-    prev_prefix = proc.prev_prefix_form_run(block, view=1)
+   # note cur and prev prefix forms (with $run)
+   cur_prefix = proc.prefix_form_run(block)
+   prev_prefix = proc.prev_prefix_form_run(block, view=1)
 
     # ME updates
-    if proc.use_me: indent = '    '
-    else:           indent = ''
-
-    # maybe there are extra options to append to the command
-    opt = block.opts.find_opt('-tshift_opts_ts')
-    if not opt or not opt.parlist: other_opts = ''
-    else: other_opts = '%s             %s \\\n' % (indent,' '.join(opt.parlist))
+   indent = '    ' if proc.use_me else ''
+   # maybe there are extra options to append to the command
+   opt = block.opts.find_opt('-tshift_opts_ts')
+   if not (opt and opt.parlist): other_opts = ''
+   else: other_opts = '%s             %s \\\n' % (indent,' '.join(opt.parlist))
 
     # write commands
-    cmd = cmd + '# %s\n'                                                \
+   cmd += '# %s\n'                                                \
                 '# time shift data so all slice timing is the same \n'  \
                 'foreach run ( $runs )\n'                               \
                 % block_header('tshift')
 
-    if proc.use_me:
-       cmd += '%sforeach eind ( $echo_list )\n' % indent
+   if proc.use_me:
+      cmd += '%sforeach eind ( $echo_list )\n' % indent
 
-    cmd += '%s    3dTshift %s %s -prefix %s \\\n'                  \
-           '%s'                                                    \
-           '%s             %s\n'                                   \
-           '%send\n'                                               \
-           % (indent, align_to, resam, cur_prefix, other_opts,
-              indent, prev_prefix, indent)
+   cmd += '%s    3dTshift %s %s -prefix %s \\\n'                  \
+          '%s'                                                    \
+          '%s             %s\n'                                   \
+          '%send\n'                                               \
+          % (indent, align_to, resam, cur_prefix, other_opts,
+             indent, prev_prefix, indent)
 
-    if proc.use_me: cmd += 'end\n'
+   if proc.use_me: cmd += 'end\n'
 
-    cmd += '\n'
+   cmd += '\n'
 
-    return cmd
+   return cmd
 
 def vr_do_min_outlier(block, proc, user_opts):
    # set up use of min outlier volume as volreg base
@@ -1684,9 +1661,7 @@ def set_vr_int_name(block, proc, prefix='', inset='', runstr='', trstr=''):
    if proc.vr_int_name != '': return 0
 
    # handle ME data
-   if proc.use_me: estr = '.e%s' % proc.regecho_var
-   else:           estr = ''
-
+   estr = '.e%s' % proc.regecho_var if proc.use_me else ''
    if inset != '':
       proc.vr_int_name = inset
    else:
@@ -1698,166 +1673,163 @@ def set_vr_int_name(block, proc, prefix='', inset='', runstr='', trstr=''):
    return 0
 
 def db_mod_volreg(block, proc, user_opts):
-    if len(block.opts.olist) == 0:   # init dset/brick indices to defaults
-        block.opts.add_opt('-volreg_base_ind', 2, [0, 2], setpar=1)
-        block.opts.add_opt('-volreg_compute_tsnr', 1, ['no'], setpar=1)
-        block.opts.add_opt('-volreg_interp', 1, ['-cubic'], setpar=1)
-        block.opts.add_opt('-volreg_opts_vr', -1, [])
-        block.opts.add_opt('-volreg_zpad', 1, [1], setpar=1)
+   if len(block.opts.olist) == 0:   # init dset/brick indices to defaults
+       block.opts.add_opt('-volreg_base_ind', 2, [0, 2], setpar=1)
+       block.opts.add_opt('-volreg_compute_tsnr', 1, ['no'], setpar=1)
+       block.opts.add_opt('-volreg_interp', 1, ['-cubic'], setpar=1)
+       block.opts.add_opt('-volreg_opts_vr', -1, [])
+       block.opts.add_opt('-volreg_zpad', 1, [1], setpar=1)
 
-    # check for updates to -volreg_base option
-    uopt = user_opts.find_opt('-volreg_base_ind')
-    bopt = block.opts.find_opt('-volreg_base_ind')
-    aopt = user_opts.find_opt('-volreg_align_to')
-    baseopt = user_opts.find_opt('-volreg_base_dset')
+   # check for updates to -volreg_base option
+   uopt = user_opts.find_opt('-volreg_base_ind')
+   bopt = block.opts.find_opt('-volreg_base_ind')
+   aopt = user_opts.find_opt('-volreg_align_to')
+   baseopt = user_opts.find_opt('-volreg_base_dset')
 
-    # no longer accepted
-    if user_opts.find_opt('-volreg_regress_per_run'):
-        print('** option -volreg_regress_per_run is no longer valid\n' \
-              '   (please use -regress_motion_per_run, instead)')
-        return 1
+   # no longer accepted
+   if user_opts.find_opt('-volreg_regress_per_run'):
+       print('** option -volreg_regress_per_run is no longer valid\n' \
+             '   (please use -regress_motion_per_run, instead)')
+       return 1
 
-    # Option -volreg_base_dset sets vr_ext_base dset, which will be copied
-    # locally as vr_ext_pre.
-    # MIN_OUTLIERS will be extracted via vr_int_name into vr_ext_pre.
-    if baseopt:
-        if uopt or aopt:
-            print("** cannot use -volreg_base_ind or _align_to with _base_dset")
-            print("   (use sub-brick selection with -volreg_base_dset DSET)")
-            return 1
-        bset = baseopt.parlist[0]
+   # Option -volreg_base_dset sets vr_ext_base dset, which will be copied
+   # locally as vr_ext_pre.
+   # MIN_OUTLIERS will be extracted via vr_int_name into vr_ext_pre.
+   if baseopt:
+       if uopt or aopt:
+           print("** cannot use -volreg_base_ind or _align_to with _base_dset")
+           print("   (use sub-brick selection with -volreg_base_dset DSET)")
+           return 1
+       bset = baseopt.parlist[0]
 
-        # baseopt can be either MIN_OUTLIER or typical case of dataset
-        if bset == 'MIN_OUTLIER':
-           # min outlier setup is actually applied in other blocks,
-           # done via block.post_cstr commands
-           if vr_do_min_outlier(block, proc, user_opts): return 1
-        else:
-           # note: vr_ext_base means vr_ext_pre+view will exist
-           proc.vr_ext_base = baseopt.parlist[0]
+       # baseopt can be either MIN_OUTLIER or typical case of dataset
+       if bset == 'MIN_OUTLIER':
+          # min outlier setup is actually applied in other blocks,
+          # done via block.post_cstr commands
+          if vr_do_min_outlier(block, proc, user_opts): return 1
+       else:
+          # note: vr_ext_base means vr_ext_pre+view will exist
+          proc.vr_ext_base = baseopt.parlist[0]
 
-    if uopt and bopt:
-        # copy new params as ints
-        if aopt:
-            print("** cannot use both '-volreg_base_ind' and '-volreg_align_to'")
-            return 1
-        errs = 0
-        try: bopt.parlist[0] = int(uopt.parlist[0]) - 1  # run -> index
-        except: errs += 1
-        try: bopt.parlist[1] = int(uopt.parlist[1])
-        except: errs += 1
-        if errs > 0:
-            print("** -volreg_base_ind requires integer params (have %s,%s)" % \
-                  (uopt.parlist[0], uopt.parlist[1]))
-            block.valid = 0
-            return 1
+   if uopt and bopt:
+       # copy new params as ints
+       if aopt:
+           print("** cannot use both '-volreg_base_ind' and '-volreg_align_to'")
+           return 1
+       errs = 0
+       try: bopt.parlist[0] = int(uopt.parlist[0]) - 1  # run -> index
+       except: errs += 1
+       try: bopt.parlist[1] = int(uopt.parlist[1])
+       except: errs += 1
+       if errs > 0:
+           print("** -volreg_base_ind requires integer params (have %s,%s)" % \
+                 (uopt.parlist[0], uopt.parlist[1]))
+           block.valid = 0
+           return 1
 
-    if aopt and bopt:
-        if aopt.parlist[0] == 'first':
-            bopt.parlist[0] = 0
-            bopt.parlist[1] = 0
-        elif aopt.parlist[0] == 'third':
-            bopt.parlist[0] = 0
-            bopt.parlist[1] = 2
-        elif aopt.parlist[0] == 'last':
+   if aopt and bopt:
+      if aopt.parlist[0] == 'first':
+         bopt.parlist[0] = 0
+         bopt.parlist[1] = 0
+      elif aopt.parlist[0] == 'third':
+          bopt.parlist[0] = 0
+          bopt.parlist[1] = 2
+      elif aopt.parlist[0] == 'last':
             # for this we need to know #trs and first and last to remove,
             # so if we don't know runs/reps yet, will have -1, which is okay
             # (if reps_vary is set, we should use reps_all)
             #
             # note: since we might not know the vr_base, it must be extracted
             # after we do, which is in db_cmd_tcat()
-            if proc.reps_vary: reps = proc.reps_all[-1]
-            else:              reps = proc.reps
-            bopt.parlist[0] = proc.runs - 1     # index of last dset
-            bopt.parlist[1] = reps - 1          # index of last rep
-        elif aopt.parlist[0] == 'MIN_OUTLIER':
-           if vr_do_min_outlier(block, proc, user_opts): return 1
-        elif aopt.parlist[0] == 'MEDIAN_BLIP':
-           pass
-        else:
-            print("** unknown '%s' param with -volreg_base_ind option" \
-                  % aopt.parlist[0])
-            return 1
+         reps = proc.reps_all[-1] if proc.reps_vary else proc.reps
+         bopt.parlist[0] = proc.runs - 1     # index of last dset
+         bopt.parlist[1] = reps - 1          # index of last rep
+      elif aopt.parlist[0] == 'MIN_OUTLIER':
+         if vr_do_min_outlier(block, proc, user_opts): return 1
+      elif aopt.parlist[0] != 'MEDIAN_BLIP':
+         print("** unknown '%s' param with -volreg_base_ind option" \
+               % aopt.parlist[0])
+         return 1
 
-    apply_uopt_to_block('-volreg_interp', user_opts, block)
-    apply_uopt_to_block('-volreg_motsim', user_opts, block)
-    apply_uopt_to_block('-volreg_get_allcostX', user_opts, block)
+   apply_uopt_to_block('-volreg_interp', user_opts, block)
+   apply_uopt_to_block('-volreg_motsim', user_opts, block)
+   apply_uopt_to_block('-volreg_get_allcostX', user_opts, block)
 
-    zopt = user_opts.find_opt('-volreg_zpad')
-    if zopt:
-        bopt = block.opts.find_opt('-volreg_zpad')
-        try: bopt.parlist[0] = int(zopt.parlist[0])
-        except:
-            print("** -volreg_zpad requires an int (have '%s')"%zopt.parlist[0])
-            return 1
-
-    apply_uopt_to_block('-volreg_opts_ms', user_opts, block)
-    apply_uopt_to_block('-volreg_opts_vr', user_opts, block)
-
-    # check for warp to tlrc space, from either auto or manual xform
-    uopt = user_opts.find_opt('-volreg_tlrc_adwarp')
-    bopt = block.opts.find_opt('-volreg_tlrc_adwarp')
-    if uopt and not bopt:
-        block.opts.add_opt('-volreg_tlrc_adwarp', 0, [])
-
-    u2 = user_opts.find_opt('-volreg_tlrc_warp')
-    bopt = block.opts.find_opt('-volreg_tlrc_warp')
-    if u2 and not bopt:
-        block.opts.add_opt('-volreg_tlrc_warp', 0, [])
-
-    # allow only 1 tlrc warp option
-    if uopt and u2:
-        print('** cannot use both -volreg_tlrc_adwarp and -volreg_tlrc_warp')
-        return 1
-    if uopt or u2:
-        if proc.origview == '+tlrc':
-           print('** already in tlrc space: -volreg_tlrc_* is not allowed')
+   zopt = user_opts.find_opt('-volreg_zpad')
+   if zopt:
+       bopt = block.opts.find_opt('-volreg_zpad')
+       try: bopt.parlist[0] = int(zopt.parlist[0])
+       except:
+           print("** -volreg_zpad requires an int (have '%s')"%zopt.parlist[0])
            return 1
-        exists = 0
+
+   apply_uopt_to_block('-volreg_opts_ms', user_opts, block)
+   apply_uopt_to_block('-volreg_opts_vr', user_opts, block)
+
+   # check for warp to tlrc space, from either auto or manual xform
+   uopt = user_opts.find_opt('-volreg_tlrc_adwarp')
+   bopt = block.opts.find_opt('-volreg_tlrc_adwarp')
+   if uopt and not bopt:
+       block.opts.add_opt('-volreg_tlrc_adwarp', 0, [])
+
+   u2 = user_opts.find_opt('-volreg_tlrc_warp')
+   bopt = block.opts.find_opt('-volreg_tlrc_warp')
+   if u2 and not bopt:
+       block.opts.add_opt('-volreg_tlrc_warp', 0, [])
+
+   # allow only 1 tlrc warp option
+   if uopt and u2:
+       print('** cannot use both -volreg_tlrc_adwarp and -volreg_tlrc_warp')
+       return 1
+   if uopt or u2:
+      if proc.origview == '+tlrc':
+         print('** already in tlrc space: -volreg_tlrc_* is not allowed')
+         return 1
+      exists = 0
         # to get from -copy_anat, no view and +tlrc exists
-        if proc.anat and proc.tlrcanat and not proc.anat.view:
-           if proc.tlrcanat.exist(): exists = 1
-        if proc.verb > 1: print('++ -copy_anat +tlrc exists = ', exists)
-        if not exists and not proc.find_block('tlrc'):
-           print("** cannot warp to tlrc space without +tlrc anat via")
-           print("   either -copy_anat or the 'tlrc' processing block")
-           return 1
-        if exists:
-           wpieces = UTIL.get_num_warp_pieces(proc.tlrcanat.input(),proc.verb)
-           if uopt and wpieces == 1:    # warning
-              print("** have auto_tlrc anat, consider '-volreg_tlrc_warp'\n" \
-                    "   (in place of '-volreg_tlrc_adwarp')")
-           elif u2 and wpieces == 12:   # error
-              print("** -volreg_tlrc_warp does not work with manual tlrc\n" \
-                    "   (consider -volreg_tlrc_adwarp instead)")
-              return 1
-
-    uopt = user_opts.find_opt('-volreg_no_extent_mask')
-    bopt = block.opts.find_opt('-volreg_no_extent_mask')
-    if uopt and not bopt:
-        block.opts.add_opt('-volreg_no_extent_mask', 0, [])
-
-    uopt = user_opts.find_opt('-volreg_align_e2a')
-    bopt = block.opts.find_opt('-volreg_align_e2a')
-    if uopt and not bopt:
-        block.opts.add_opt('-volreg_align_e2a', 0, [])
-
-    uopt = user_opts.find_opt('-volreg_warp_dxyz')
-    bopt = block.opts.find_opt('-volreg_warp_dxyz')
-    if uopt:
-        try: dxyz = float(uopt.parlist[0])
-        except:
-            print("** -volreg_warp_dxyz requires float ('%s')"%uopt.parlist[0])
+      if (proc.anat and proc.tlrcanat and not proc.anat.view
+          and proc.tlrcanat.exist()): exists = 1
+      if proc.verb > 1: print('++ -copy_anat +tlrc exists = ', exists)
+      if not (exists or proc.find_block('tlrc')):
+         print("** cannot warp to tlrc space without +tlrc anat via")
+         print("   either -copy_anat or the 'tlrc' processing block")
+         return 1
+      if exists:
+         wpieces = UTIL.get_num_warp_pieces(proc.tlrcanat.input(),proc.verb)
+         if uopt and wpieces == 1:    # warning
+            print("** have auto_tlrc anat, consider '-volreg_tlrc_warp'\n" \
+                  "   (in place of '-volreg_tlrc_adwarp')")
+         elif u2 and wpieces == 12:   # error
+            print("** -volreg_tlrc_warp does not work with manual tlrc\n" \
+                  "   (consider -volreg_tlrc_adwarp instead)")
             return 1
-        if bopt: bopt.parlist[0] = dxyz
-        else: block.opts.add_opt('-volreg_warp_dxyz', 1, [dxyz], setpar=1)
 
-    # check on tsnr
-    uopt = user_opts.find_opt('-volreg_compute_tsnr')
-    bopt = block.opts.find_opt('-volreg_compute_tsnr')
-    if uopt: bopt.parlist = uopt.parlist
+   uopt = user_opts.find_opt('-volreg_no_extent_mask')
+   bopt = block.opts.find_opt('-volreg_no_extent_mask')
+   if uopt and not bopt:
+       block.opts.add_opt('-volreg_no_extent_mask', 0, [])
 
-    block.valid = 1
+   uopt = user_opts.find_opt('-volreg_align_e2a')
+   bopt = block.opts.find_opt('-volreg_align_e2a')
+   if uopt and not bopt:
+       block.opts.add_opt('-volreg_align_e2a', 0, [])
+
+   uopt = user_opts.find_opt('-volreg_warp_dxyz')
+   bopt = block.opts.find_opt('-volreg_warp_dxyz')
+   if uopt:
+       try: dxyz = float(uopt.parlist[0])
+       except:
+           print("** -volreg_warp_dxyz requires float ('%s')"%uopt.parlist[0])
+           return 1
+       if bopt: bopt.parlist[0] = dxyz
+       else: block.opts.add_opt('-volreg_warp_dxyz', 1, [dxyz], setpar=1)
+
+   # check on tsnr
+   uopt = user_opts.find_opt('-volreg_compute_tsnr')
+   bopt = block.opts.find_opt('-volreg_compute_tsnr')
+   if uopt: bopt.parlist = uopt.parlist
+
+   block.valid = 1
 
 def db_cmd_volreg(proc, block):
     cmd = ''

@@ -314,15 +314,15 @@ def get_studies(base_dir=None, followlinks=False):
                 d = dict(zip(cols, row))
                 studies.append(_Study(d))
         return studies
-    query = """SELECT study 
+    with _db_nochange() as c:
+        study_uids = {}
+        query = """SELECT study 
                  FROM series 
                 WHERE uid IN (SELECT series 
                                 FROM storage_instance 
                                WHERE uid IN (SELECT storage_instance 
                                                FROM file 
                                               WHERE directory = ?))"""
-    with _db_nochange() as c:
-        study_uids = {}
         for dir in _get_subdirs(base_dir, followlinks=followlinks):
             c.execute(query, (dir, ))
             for row in c:

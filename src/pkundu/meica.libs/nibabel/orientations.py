@@ -79,10 +79,7 @@ def io_orientation(affine, tol=None):
             out_ax = np.argmax(np.abs(col))
             ornt[in_ax, 0] = out_ax
             assert col[out_ax] != 0
-            if col[out_ax] < 0:
-                ornt[in_ax, 1] = -1
-            else:
-                ornt[in_ax, 1] = 1
+            ornt[in_ax, 1] = -1 if col[out_ax] < 0 else 1
             # remove the identified axis from further consideration, by
             # zeroing out the corresponding row in R
             R[out_ax, :] = 0

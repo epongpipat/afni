@@ -45,8 +45,7 @@ def round_trip(img):
     sio = BytesIO()
     img.file_map['image'].fileobj = sio
     img.to_file_map()
-    img2 = Nifti1Image.from_file_map(img.file_map)
-    return img2
+    return Nifti1Image.from_file_map(img.file_map)
 
 
 def test_conversion():
@@ -115,7 +114,6 @@ def test_save_load():
     img.set_data_dtype(npt)
     with InTemporaryDirectory() as pth:
         nifn = 'an_image.nii'
-        sifn = 'another_image.img'
         ni1.save(img, nifn)
         re_img = nils.load(nifn)
         assert_true(isinstance(re_img, ni1.Nifti1Image))
@@ -126,6 +124,7 @@ def test_save_load():
         # temporary directory. 
         del re_img
         if have_scipy: # skip we we cannot read .mat files
+            sifn = 'another_image.img'
             spm2.save(img, sifn)
             re_img2 = nils.load(sifn)
             assert_true(isinstance(re_img2, spm2.Spm2AnalyzeImage))

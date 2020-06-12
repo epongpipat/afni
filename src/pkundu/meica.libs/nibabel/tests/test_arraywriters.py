@@ -369,7 +369,7 @@ def test_io_scaling():
         info = type_info(in_type)
         arr[0], arr[1] = info['min'], info['max']
         aw = SlopeInterArrayWriter(arr, out_dtype, calc_scale=False)
-        if not err is None:
+        if err is not None:
             assert_raises(err, aw.calc_scale)
             continue
         aw.calc_scale()

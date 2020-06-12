@@ -243,10 +243,9 @@ class Scheduler(object):
         (e.g. if no free worker processes are available).
         """
         self._lock.acquire()
-        if task_callable is None:
-            if self._last_callable is None:
-                raise Exception("No task_callable specified and " +
-                                "no previous callable available.")
+        if task_callable is None and self._last_callable is None:
+            raise Exception("No task_callable specified and " +
+                            "no previous callable available.")
         self._n_open_tasks += 1
         self._task_counter += 1
         task_index = self.task_counter

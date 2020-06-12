@@ -93,14 +93,15 @@ class Layer(mdp.Node):
         elif len(nodes_dtypes) == 1:
             nodes_dtype = list(nodes_dtypes)[0]
         # check that the nodes dtype matches the specified dtype
-        if nodes_dtype and dtype:
-            if not numx.dtype(nodes_dtype) == numx.dtype(dtype):
-                err = ("Cannot set dtype to %s: " %
-                       numx.dtype(nodes_dtype).name +
-                       "an internal node requires %s" % numx.dtype(dtype).name)
-                raise mdp.NodeException(err)
-        elif nodes_dtype and not dtype:
-            dtype = nodes_dtype
+        if nodes_dtype:
+            if dtype:
+                if numx.dtype(nodes_dtype) != numx.dtype(dtype):
+                    err = ("Cannot set dtype to %s: " %
+                           numx.dtype(nodes_dtype).name +
+                           "an internal node requires %s" % numx.dtype(dtype).name)
+                    raise mdp.NodeException(err)
+            else:
+                dtype = nodes_dtype
         return dtype
 
     def _set_dtype(self, t):
@@ -162,9 +163,9 @@ class Layer(mdp.Node):
                 in_stop += node.input_dim
                 node._pre_execution_checks(x[:,in_start:in_stop])
             self.output_dim = self._get_output_dim_from_nodes()
-            if self.output_dim is None:
-                err = "output_dim must be set at this point for all nodes"
-                raise mdp.NodeException(err)
+        if self.output_dim is None:
+            err = "output_dim must be set at this point for all nodes"
+            raise mdp.NodeException(err)
         super(Layer, self)._pre_execution_checks(x)
 
     def _execute(self, x, *args, **kwargs):
@@ -279,7 +280,7 @@ class SameInputLayer(Layer):
         # check that the input dimensions are all the same
         input_dim = self.nodes[0].input_dim
         for node in self.nodes:
-            if not node.input_dim == input_dim:
+            if node.input_dim != input_dim:
                 err = "The nodes have different input dimensions."
                 raise mdp.NodeException(err)
         output_dim = self._get_output_dim_from_nodes()
@@ -305,9 +306,9 @@ class SameInputLayer(Layer):
             for node in self.nodes:
                 node._pre_execution_checks(x)
             self.output_dim = self._get_output_dim_from_nodes()
-            if self.output_dim is None:
-                err = "output_dim must be set at this point for all nodes"
-                raise mdp.NodeException(err)
+        if self.output_dim is None:
+            err = "output_dim must be set at this point for all nodes"
+            raise mdp.NodeException(err)
         # intentionally use MRO above Layer, not SameInputLayer
         super(Layer, self)._pre_execution_checks(x)
 

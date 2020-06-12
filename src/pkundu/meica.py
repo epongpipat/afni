@@ -71,8 +71,7 @@ def version_checker(cur_ver,ref_ver):
 	cur_V = cur_Varr[0]*10**2 + cur_Varr[1]%100
 	ref_Varr = [int(vvv) for vvv in ref_ver.split('.')[0:2]]
 	ref_V = ref_Varr[0]*10**2 + ref_Varr[1]%100
-	if cur_V > ref_V: return True
-	return False
+	return cur_V > ref_V
 
 #Run dependency check
 def dep_check():
@@ -143,10 +142,11 @@ def getdsname(e_ii,prefixonly=False):
 def logcomment(comment,level=3): 
 	majmark='\n'
 	leading='--------'
-	if level==3: majmark=''
-	if level==1: 
+	if level == 1:
 		leading="+* "
 		sl.append("""echo "\n++++++++++++++++++++++++" """)
+		majmark=''
+	elif level == 3:
 		majmark=''
 	sl.append("""%secho %s"%s" """ % (majmark,leading,comment))
 

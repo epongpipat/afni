@@ -827,7 +827,6 @@ def test_loadsave_cycle():
     # the test below does not pass, because the slope and inter are
     # always reset from the data, by the image write
     raise SkipTest
-    assert_equal(lnim.get_header().get_slope_inter(), (2, 8))
 
 
 def test_slope_inter():
@@ -969,7 +968,7 @@ def test_float_int_min_max():
     for in_dt in (np.float32, np.float64):
         finf = type_info(in_dt)
         arr = np.array([finf['min'], finf['max']], dtype=in_dt)
-        for out_dt in IUINT_TYPES:
+        for _ in IUINT_TYPES:
             img = Nifti1Image(arr, aff)
             img_back = round_trip(img)
             arr_back_sc = img_back.get_data()
@@ -984,7 +983,7 @@ def test_float_int_spread():
     aff = np.eye(4)
     for in_dt in (np.float32, np.float64):
         arr_t = arr.astype(in_dt)
-        for out_dt in IUINT_TYPES:
+        for _ in IUINT_TYPES:
             img = Nifti1Image(arr_t, aff)
             img_back = round_trip(img)
             arr_back_sc = img_back.get_data()
@@ -1007,7 +1006,7 @@ def test_rt_bias():
     aff = np.eye(4)
     for in_dt in (np.float32, np.float64):
         arr_t = arr.astype(in_dt)
-        for out_dt in IUINT_TYPES:
+        for _ in IUINT_TYPES:
             img = Nifti1Image(arr_t, aff)
             img_back = round_trip(img)
             arr_back_sc = img_back.get_data()

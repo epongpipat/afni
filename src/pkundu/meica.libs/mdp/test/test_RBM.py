@@ -19,7 +19,7 @@ def test_RBM_sample_h():
     # ### test 1
     v = numx.array([[0,0],[1,0],[0,1],[1,1.]])
     h = []
-    for n in xrange(1000):
+    for _ in xrange(1000):
         prob, sample = bm.sample_h(v)
         h.append(sample)
 
@@ -39,7 +39,7 @@ def test_RBM_sample_h():
     # ### test 2, with bias
     bm.bh -= 1e2
     h = []
-    for n in xrange(100):
+    for _ in xrange(100):
         prob, sample = bm.sample_h(v)
         h.append(sample)
 
@@ -74,7 +74,7 @@ def test_RBM_sample_v():
     # test 1
     h = numx.array([[0,0],[1,0],[0,1],[1,1.]])
     v = []
-    for n in xrange(1000):
+    for _ in xrange(1000):
         prob, sample = bm.sample_v(h)
         v.append(sample)
 
@@ -94,7 +94,7 @@ def test_RBM_sample_v():
     # test 2, with bias
     bm.bv -= 1e2
     v = []
-    for n in xrange(1000):
+    for _ in xrange(1000):
         prob, sample = bm.sample_v(h)
         v.append(sample)
 
@@ -165,13 +165,10 @@ def test_RBM_learning():
     for k in xrange(1500):
         if k%5==0: spinner()
 
-        if k>5:
-            mom = 0.9
-        else:
-            mom = 0.5
+        mom = 0.9 if k>5 else 0.5
         bm.train(v, epsilon=0.3, momentum=mom)
         if bm._train_err/N<0.1: break
-        #print '-------', bm._train_err
+            #print '-------', bm._train_err
 
     assert bm._train_err / N < 0.1
 

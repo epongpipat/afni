@@ -309,7 +309,7 @@ class Outputter(object):
     @property
     def pending_data(self):
         " True if there is character data pending for processing "
-        return not self._char_blocks is None
+        return self._char_blocks is not None
 
 
 def parse_gifti_file(fname, buffer_size = None):

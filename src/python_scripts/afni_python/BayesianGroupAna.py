@@ -32,7 +32,7 @@ def zero2one(p):
 
 ## check for rectiness of mvm table
 def data_is_rect(mdata):
-    if mdata == None: return 1
+    if mdata is None: return 1
     if len(mdata) == 0: return 1
     rlen = len(mdata[0])
     for row in mdata:

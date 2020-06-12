@@ -43,7 +43,7 @@ class _LabelNormalizer(object):
 
     def _set_label_dicts(self, t_label_norm):
         self._mapping = dict(t_label_norm)
-        self._inverse = dict((norm, label) for label, norm in t_label_norm)
+        self._inverse = {norm: label for label, norm in t_label_norm}
 
         # check that neither original nor normalised labels have occured more than once
         if not (len(self._mapping) == len(t_label_norm) == len(self._inverse)):

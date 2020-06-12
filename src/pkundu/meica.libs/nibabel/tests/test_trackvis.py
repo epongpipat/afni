@@ -102,26 +102,19 @@ def test_write_scalars_props():
 def streams_equal(stream1, stream2):
     if not np.all(stream1[0] == stream2[0]):
         return False
-    if stream1[1] is None:
-        if not stream2[1] is None:
-            return False
-    if stream1[2] is None:
-        if not stream2[2] is None:
-            return False
+    if stream1[1] is None and stream2[1] is not None:
+        return False
+    if stream1[2] is None and stream2[2] is not None:
+        return False
     if not np.all(stream1[1] == stream2[1]):
         return False
-    if not np.all(stream1[2] == stream2[2]):
-        return False
-    return True
+    return bool(np.all(stream1[2] == stream2[2]))
 
 
 def streamlist_equal(streamlist1, streamlist2):
     if len(streamlist1) != len(streamlist2):
         return False
-    for s1, s2 in zip(streamlist1, streamlist2):
-        if not streams_equal(s1, s2):
-            return False
-    return True
+    return all(streams_equal(s1, s2) for s1, s2 in zip(streamlist1, streamlist2))
 
 
 def test_round_trip():

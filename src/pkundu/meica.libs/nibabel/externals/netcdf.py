@@ -262,7 +262,7 @@ class netcdf_file(object):
         self.use_mmap = mmap
         self.version_byte = version
 
-        if not mode in 'rw':
+        if mode not in 'rw':
             raise ValueError("Mode must be either 'r' or 'w'.")
         self.mode = mode
 
@@ -438,9 +438,8 @@ class netcdf_file(object):
                 self._write_var_metadata(name)
             # Now that we have the metadata, we know the vsize of
             # each record variable, so we can calculate recsize.
-            self.__dict__['_recsize'] = sum([
-                    var._vsize for var in self.variables.values()
-                    if var.isrec])
+            self.__dict__['_recsize'] = sum(var._vsize for var in self.variables.values()
+                            if var.isrec)
             # Set the data for all variables.
             for name in variables:
                 self._write_var_data(name)
@@ -540,10 +539,7 @@ class netcdf_file(object):
 
         self.fp.write(asbytes(nc_type))
 
-        if values.dtype.char == 'S':
-            nelems = values.itemsize
-        else:
-            nelems = values.size
+        nelems = values.itemsize if values.dtype.char == 'S' else values.size
         self._pack_int(nelems)
 
         if not values.shape and (values.dtype.byteorder == '<' or
@@ -556,7 +552,7 @@ class netcdf_file(object):
     def _read(self):
         # Check magic bytes and version
         magic = self.fp.read(3)
-        if not magic == asbytes('CDF'):
+        if magic != asbytes('CDF'):
             raise TypeError("Error: %s is not a valid NetCDF 3 file" %
                             self.filename)
         self.__dict__['version_byte'] = fromstring(self.fp.read(1), '>b')[0]
@@ -572,11 +568,11 @@ class netcdf_file(object):
 
     def _read_dim_array(self):
         header = self.fp.read(4)
-        if not header in [ZERO, NC_DIMENSION]:
+        if header not in [ZERO, NC_DIMENSION]:
             raise ValueError("Unexpected header.")
         count = self._unpack_int()
 
-        for dim in range(count):
+        for _ in range(count):
             name = asstr(self._unpack_string())
             length = self._unpack_int() or None  # None for record dimension
             self.dimensions[name] = length
@@ -588,19 +584,19 @@ class netcdf_file(object):
 
     def _read_att_array(self):
         header = self.fp.read(4)
-        if not header in [ZERO, NC_ATTRIBUTE]:
+        if header not in [ZERO, NC_ATTRIBUTE]:
             raise ValueError("Unexpected header.")
         count = self._unpack_int()
 
         attributes = {}
-        for attr in range(count):
+        for _ in range(count):
             name = asstr(self._unpack_string())
             attributes[name] = self._read_values()
         return attributes
 
     def _read_var_array(self):
         header = self.fp.read(4)
-        if not header in [ZERO, NC_VARIABLE]:
+        if header not in [ZERO, NC_VARIABLE]:
             raise ValueError("Unexpected header.")
 
         begin = 0
@@ -688,7 +684,7 @@ class netcdf_file(object):
         shape = []
         dims = self._unpack_int()
 
-        for i in range(dims):
+        for _ in range(dims):
             dimid = self._unpack_int()
             dimname = self._dims[dimid]
             dimensions.append(dimname)
@@ -910,10 +906,7 @@ class netcdf_variable(object):
     def __setitem__(self, index, data):
         # Expand data for record vars?
         if self.isrec:
-            if isinstance(index, tuple):
-                rec_index = index[0]
-            else:
-                rec_index = index
+            rec_index = index[0] if isinstance(index, tuple) else index
             if isinstance(rec_index, slice):
                 recs = (rec_index.start or 0) + len(data)
             else:

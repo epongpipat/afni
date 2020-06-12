@@ -50,13 +50,11 @@ class afni_name(object):
 
    def ppve(self, sel=0):
       """show path, prefix, view and extension"""
-      s = "%s%s" % (self.p(), self.pve(sel=sel))
-      return s
+      return "%s%s" % (self.p(), self.pve(sel=sel))
 
    def rppve(self, sel=0):
       """show path, prefix, view and extension"""
-      s = "%s%s" % (self.realp(), self.pve(sel=sel))
-      return s
+      return "%s%s" % (self.realp(), self.pve(sel=sel))
 
    # selectors, along with many sel=0 function parameters  7 Jun 2016 [rickr]
    def selectors(self):
@@ -123,8 +121,7 @@ class afni_name(object):
          e.g. would include .nii"""
       if self.type == 'BRIK':
          # separate selectors for HEAD case
-         if sel: sstr = self.selectors()
-         else:   sstr = ''
+         sstr = self.selectors() if sel else ''
          name = self.rpv()
          if head: return '%s%s%s' % (name, '.HEAD', sstr)
          else:    return '%s%s' % (name, sstr)
@@ -140,8 +137,7 @@ class afni_name(object):
       """
       if self.type == 'BRIK':
          # separate selectors for HEAD case
-         if sel: sstr = self.selectors()
-         else:   sstr = ''
+         sstr = self.selectors() if sel else ''
          name = self.pv()
          if head: return '%s%s%s' % (name, '.HEAD', sstr)
          else:    return '%s%s' % (name, sstr)
@@ -158,12 +154,10 @@ class afni_name(object):
          return self.pve() 
    def ppv(self, sel=0):
       """return path, prefix, view formatted name"""
-      s = "%s%s" % (self.p(), self.pv(sel=sel))
-      return s
+      return "%s%s" % (self.p(), self.pv(sel=sel))
    def rppv(self, sel=0):
       """return path, prefix, view formatted name resolving symbolic links"""
-      s = "%s%s" % (self.realp(), self.pv(sel=sel))
-      return s
+      return "%s%s" % (self.realp(), self.pv(sel=sel))
    def rel_dir(self, sel=0):
       """return relative directory of an object
          - this will be empty (instead of "./") if in current directory
@@ -185,29 +179,25 @@ class afni_name(object):
          - do not include ./ as relative path"""
       # rp = str.replace(self.path, "%s/" % os.path.abspath(os.curdir), '')
       rp = self.rel_dir()
-      s = "%s%s" % (rp, self.pv(sel=sel))
-      return s
+      return "%s%s" % (rp, self.pv(sel=sel))
    def rpve(self, sel=0):
       """return relative path, prefix, view, extension formatted name
          - do not include ./ as relative path"""
       rp = self.rel_dir()
-      s = "%s%s" % (rp, self.pve(sel=sel))
-      return s
+      return "%s%s" % (rp, self.pve(sel=sel))
    def pp(self):
       """return path, prefix formatted name"""
       return "%s%s" % (self.p(), self.prefix)
    def pv(self, sel=0):
       """return prefix, view formatted name"""
-      if sel: sstr = self.selectors()
-      else:   sstr = ''
+      sstr = self.selectors() if sel else ''
       if self.type == 'BRIK':
          return "%s%s%s" % (self.prefix, self.view, sstr)
       else:
          return self.pve(sel=sel)
    def pve(self, sel=0):
       """return prefix, view, extension formatted name"""
-      if sel: sstr = self.selectors()
-      else:   sstr = ''
+      sstr = self.selectors() if sel else ''
       return "%s%s%s%s" % (self.prefix, self.view, self.extension, sstr)
    def dims(self, quotes=1):
       """return xyzt dimensions, as a list of ints"""
@@ -284,26 +274,26 @@ class afni_name(object):
             shell_com("rm %s" % self.ppve(), oexec).run()
       return
    def move_to_dir(self, path="", oexec=""):
-      #self.show()
-      #print path
-      found = 0
       if os.path.isdir(path):
+         #self.show()
+         #print path
+         found = 0
          if (self.type == 'BRIK'):
             if os.path.isfile("%s.HEAD" % self.ppv()):
                sv = shell_com("mv %s %s/" % (self.head(), path), oexec).run()
-               found = found + 1
-            if os.path.isfile("%s.BRIK" % self.ppv()):           
+               found += 1
+            if os.path.isfile("%s.BRIK" % self.ppv()):  
                sv = shell_com("mv %s %s/" % (self.brick(), path), oexec).run()
-               found = found + 1
+               found += 1
             if os.path.isfile("%s.BRIK.gz" % self.ppv()):
                sv = shell_com("mv %s %s/" % (self.brickgz(), path), oexec).run()
-               found = found + 1         
+               found += 1
             if os.path.isfile("%s.BRIK.bz2" % self.ppv()):
                sv = shell_com("mv %s %s/" % (self.brickbz2(), path), oexec).run()
-               found = found + 1 
+               found += 1
             if os.path.isfile("%s.BRIK.Z" % self.ppv()):
                sv = shell_com("mv %s %s/" % (self.brickZ(), path), oexec).run()
-               found = found + 1 
+               found += 1
             if (found > 0):
                self.new_path(path)
                if ( not self.exist() and oexec != "dry_run"):
@@ -315,10 +305,10 @@ class afni_name(object):
          else:
             if os.path.isfile("%s" % self.ppve()):
                sv = shell_com("mv %s %s/" % (self.ppve(), path), oexec).run()
-               found = found + 1
+               found += 1
             if (found > 0):
                self.new_path(path)
-               if ( not self.exist() and oexec != "dry_run"):
+               if not (self.exist() or oexec == "dry_run"):
                   print("Error: Move to %s failed" % (self.ppv()))
                   return 0
             else:
@@ -341,8 +331,7 @@ class afni_name(object):
       return "%s.BRIK.Z" % self.ppv() 
    def new_path(self,path=""):
       #give name a new path (check for root)
-      if len(path) == 0: pp = "./"
-      else:              pp = path
+      pp = "./" if len(path) == 0 else path
       ap = os.path.abspath(pp)
       # require this to end in a '/'
       if ap[-1] != '/': ap += '/'
@@ -358,10 +347,10 @@ class afni_name(object):
       if verb > 1: print("   curdir  : %s" % os.path.abspath(os.curdir))
 
       print("   initial : %s" % self.initname)
-      if verb > 1: print("   name    : %s" % self.ppve())
-      if verb > 1: print("   path    : %s" % self.path)
-
-      print("   prefix  : %s" % self.prefix)   
+      if verb > 1:
+         print("   name    : %s" % self.ppve())
+         print("   path    : %s" % self.path)
+      print("   prefix  : %s" % self.prefix)
       print("   view    : %s" % self.view)
       print("   exten.  : %s" % self.extension)
       print("   type    : %s" % self.type)
@@ -371,7 +360,7 @@ class afni_name(object):
       print("   Node Sel: %s" % self.nodesel)
       print("   RangeSel: %s" % self.rangesel)
       
-   def new(self, new_pref='', new_view='', parse_pref=0):  
+   def new(self, new_pref='', new_view='', parse_pref=0):
       """return a copy with optional new_prefix and new_view
          if parse_pref, parse prefix as afni_name
       """
@@ -385,10 +374,7 @@ class afni_name(object):
          else: an.prefix = new_pref
       else:
          an.prefix = self.prefix
-      if len(new_view):
-         an.view = new_view
-      else:
-         an.view = self.view
+      an.view = new_view if len(new_view) else self.view
       an.extension = self.extension
       an.type = self.type
       return an
@@ -440,7 +426,7 @@ class comopt(object):
       print("  acceptlist = %s" % self.acceptlist)
 
    def test(self):
-      if (len(self.deflist) != 0 and self.parlist == None):
+      if len(self.deflist) != 0 and self.parlist is None:
          # some checks possible, parlist not set yet
          if self.n_exp >= 0:
             if len(self.deflist) != self.n_exp:
@@ -453,8 +439,8 @@ class comopt(object):
                print("Error: Option %s needs at least %d parameters\n"  \
                      "Default list has %d parameters."\
                         % (self.name, -self.n_exp, len(self.deflist)))
-               return None 
-      else :
+               return None
+      else:
          if self.n_exp >= 0:
             #print "option %s n_exp = %d, len(parlist)=%d" % (self.name, self.n_exp, len(self.parlist))
             #self.show()
@@ -468,7 +454,7 @@ class comopt(object):
                print("Error: Option %s needs at least %d parameters\n"  \
                      "Parameter list has %d parameters."\
                         % (self.name, -self.n_exp, len(self.parlist)))
-               return None 
+               return None
       return 1
 
 class shell_com(object):
@@ -514,22 +500,16 @@ class shell_com(object):
          tcom = re.sub(r"[ ]{2,}", ' ', self.com).replace(self.dir, './')
       return tcom
    def echo(self): 
-      if (len(self.trimcom) < len(self.com)):
-         ms = " (command trimmed)"
-      else:
-         ms = ""
-      if self.eo == "echo":
-         print("#Now running%s:\n   cd %s\n   %s" % (ms, self.dir, self.trimcom))
-         sys.stdout.flush()
-      elif self.eo == "dry_run":
+      ms = " (command trimmed)" if (len(self.trimcom) < len(self.com)) else ""
+      if self.eo == "dry_run":
          print("#Would be running%s:\n  %s" % (ms, self.trimcom))
          sys.stdout.flush()
-      elif (self.eo == "script"):
+      elif self.eo == "echo":
+         print("#Now running%s:\n   cd %s\n   %s" % (ms, self.dir, self.trimcom))
+         sys.stdout.flush()
+      elif self.eo == "script":
          print("#Script is running%s:\n  %s" % (ms, self.trimcom))
          sys.stdout.flush()
-      elif (self.eo == "quiet"):
-         pass
-      
       if self.exc==1:
          print("#    WARNING: that command has been executed already! ")
          sys.stdout.flush()
@@ -668,13 +648,8 @@ def dset_dims(dset):
 
 #transform a list of afni names to one string for shell script usage
 def anlist(vlst, sb=''):
-   namelst = []
-   if len(sb):
-      sbs = "'%s'" % sb
-   else:
-      sbs = ''
-   for an in vlst:
-      namelst.append("%s%s" % (an.ppv(), sbs))    
+   sbs = "'%s'" % sb if len(sb) else ''
+   namelst = ["%s%s" % (an.ppv(), sbs) for an in vlst]
    return str.join(' ',namelst)
 
 
@@ -690,7 +665,7 @@ def getopts(argv):
    return opts
 
 def show_opts2(opts):
-   if opts == None:
+   if opts is None:
       print("Option dictionary is None\n")
       return
    print(opts)
@@ -730,7 +705,7 @@ def getopts2(argv,oplist):
    op = comopt('basename',0, [])
    opts['basename'] = op
    argv.remove( argv[0] )
-   
+
    #form a list of the known options
    optnames = []
    for op in oplist:
@@ -747,44 +722,43 @@ def getopts2(argv,oplist):
             while ((op.n_exp < 0 and op.iname < len(argv)) or \
                (op.n_exp > 0 and len(op.parlist) < op.n_exp and len(argv) > 0))\
                  and argv[op.iname] not in optnames:
-               if len(op.acceptlist):
-                  if argv[op.iname] not in op.acceptlist:
-                     print("Error: parameter value %s for %s is not "   \
-                           "acceptable\nChoose from %s" %               \
-                           (argv[op.iname], op.name,                    \
-                           str.join(' , ',op.acceptlist)))
+               if len(op.acceptlist) and argv[op.iname] not in op.acceptlist:
+                  print("Error: parameter value %s for %s is not "   \
+                        "acceptable\nChoose from %s" %               \
+                        (argv[op.iname], op.name,                    \
+                        str.join(' , ',op.acceptlist)))
                op.parlist.append(argv[op.iname]) #string added
                argv.remove(argv[op.iname])       #remove this string from list          
             op.n_found = len(op.parlist)
-               
-      else : #No option in argv, just copy option
+
+      else: #No option in argv, just copy option
          op.parlist = op.deflist
-      
+
       #Now copy results to dictionary
       opts[op.name] = op #a bit of redundancy, but I don't care
-      
-      if (op.test() == None):
+
+      if op.test() is None:
          afni_base.show_opts2(opts)
          return None
-         
-         
+
+
    #Any remaining?
    for op in oplist:
       if op.name == 'loose':  #Expecting loose params
          if op.n_exp < 0 or op.n_exp > 0: #parameters expected, get them
             op.parlist.extend(argv)    #stick'em all in
             opts[op.name] = op
-            if op.n_exp > 0 and len(op.parlist) != op.n_exp:
-               print("Error: Expecting %d parameters\n" \
-                     "Have %d on command line (%s).\n" % \
-                     (op.n_exp, len(op.parlist), op.parlist))
-               return None
+         if op.n_exp > 0 and len(op.parlist) != op.n_exp:
+            print("Error: Expecting %d parameters\n" \
+                  "Have %d on command line (%s).\n" % \
+                  (op.n_exp, len(op.parlist), op.parlist))
+            return None
       elif len(argv) > 0:
          print("Error: Expecting no loose parameters.\n"        \
                "Have %d loose parameters (or bad option) on "   \
                "command line (%s).\n" % (len(argv), argv))
          return None
-   
+
    #go west young man
    return opts        
                      
@@ -882,15 +856,15 @@ def parse_afni_name(name, aname=None, do_sel=1):
 #utilitiarian laziness
 def afni_prefix(names):
    pref = []
-   for run in range(0, len(names)):
-      res = parse_afni_name(names[run])
+   for name in names:
+      res = parse_afni_name(name)
       pref.append(res['prefix'])
    return pref
       
 def afni_view(names):
    pref = []
-   for run in range(0, len(names)):
-      res = parse_afni_name(names[run])
+   for name in names:
+      res = parse_afni_name(name)
       pref.append(res['view'])
    return pref
 
@@ -1046,11 +1020,7 @@ def python_ver_float():
    """return the python version, as a float"""
    vs = sys.version.split()[0]
    vlist = vs.split('.')
-   if len(vlist) > 1:
-      vs = "%s.%s" % (vlist[0], vlist[1])
-   else:
-      vs = vlist[0]
-
+   vs = "%s.%s" % (vlist[0], vlist[1]) if len(vlist) > 1 else vlist[0]
    return float(vs)
 
 #generic unique function, from:
@@ -1160,8 +1130,7 @@ def GetSelectionFromList(l, prmpt = ""):
    PrintIndexedList(l)
    if len(prmpt)==0:
       prmpt = 'Enter Selection by number or name: '
-   cnt = 0
-   while cnt < 10:
+   for _ in range(10):
       name = input(prmpt)
       if not name:
          return None
@@ -1179,7 +1148,6 @@ def GetSelectionFromList(l, prmpt = ""):
          else:
             print("Input error: selection %s has %d matches in list." %  \
                   ( name, len(match(name, l))))
-      cnt += 1
    print("Vous ne comprenez pas l'anglais?")
    print("Ciao")
    

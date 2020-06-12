@@ -117,8 +117,7 @@ class GrowingNeuralGasNode(Node):
         self.output_dim = n
 
     def _add_node(self, pos):
-        node = self.graph.add_node(_NGNodeData(pos))
-        return node
+        return self.graph.add_node(_NGNodeData(pos))
 
     def _add_edge(self, from_, to_):
         self.graph.add_edge(from_, to_, _NGEdgeData())
@@ -382,10 +381,7 @@ class NeuralGasNode(GrowingNeuralGasNode):
         while remaining_epochs > 0:
             # reset permutation of data points
             di = numx.random.permutation(input)
-            if epoch < max_epochs:
-                denom = epoch/max_epochs
-            else:
-                denom = 1.
+            denom = epoch/max_epochs if epoch < max_epochs else 1.
             epsilon = e_i * ((e_f/e_i)**denom)
             lmbda = l_i * ((l_f/l_i)**denom)
             T = T_i * ((T_f/T_i)**denom)

@@ -28,10 +28,12 @@ def testGeneralExpansionNode():
                               dumb_quadratic_expansion(input), 6,
                               "incorrect constant expansion")
     assert cen.expanded_dim(input_dim) == 2 * input_dim + input_dim**2, "expanded_dim failed"
-    assert_array_almost_equal(cen.output_sizes(input_dim),
-                              numx.array([input_dim, input_dim,
-                                          input_dim*input_dim]), 6,
-                              "output_sizes failed")
+    assert_array_almost_equal(
+        cen.output_sizes(input_dim),
+        numx.array([input_dim, input_dim, input_dim ** 2]),
+        6,
+        "output_sizes failed",
+    )
 
 @requires_scipy
 def testGeneralExpansionNode_inverse():
@@ -50,7 +52,7 @@ def testGeneralExpansionNode_inverse():
     # testing with use_hint = False is tricky, it often fails.
     # we try 20 times in a row and hope for the best
     trials = 20
-    for trial in range(trials):
+    for _ in range(trials):
         cen = mdp.nodes.GeneralExpansionNode(funcs)
         input = numx.random.normal(size=(samples, input_dim))
         out = cen.execute(input)

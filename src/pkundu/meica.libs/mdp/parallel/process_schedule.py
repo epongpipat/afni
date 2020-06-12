@@ -80,10 +80,7 @@ class ProcessScheduler(Scheduler):
         super(ProcessScheduler, self).__init__(
                                         result_container=result_container,
                                         verbose=verbose)
-        if n_processes:
-            self._n_processes = n_processes
-        else:
-            self._n_processes = cpu_count()
+        self._n_processes = n_processes if n_processes else cpu_count()
         self._cache_callable = cache_callable
         if python_executable is None:
             python_executable = sys.executable
@@ -94,8 +91,7 @@ class ProcessScheduler(Scheduler):
         # Note: -u argument is important on Windows to set stdout to binary
         #    mode. Otherwise you might get a strange error message for
         #    copy_reg.
-        process_args = [python_executable, "-u", module_file]
-        process_args.append(str(self._cache_callable))
+        process_args = [python_executable, "-u", module_file, str(self._cache_callable)]
         if isinstance(source_paths, str):
             source_paths = [source_paths]
         if source_paths is None:

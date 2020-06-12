@@ -48,10 +48,7 @@ class OrderedDict(dict, _DictMixin):
     def popitem(self, last=True):
         if not self:
             raise KeyError('dictionary is empty')
-        if last:
-            key = reversed(self).next()
-        else:
-            key = iter(self).next()
+        key = reversed(self).next() if last else iter(self).next()
         value = self.pop(key)
         return key, value
 

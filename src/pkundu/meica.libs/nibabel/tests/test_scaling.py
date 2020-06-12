@@ -182,7 +182,7 @@ def test_array_file_scales():
         arr = np.zeros((3,), dtype=in_type)
         info = type_info(in_type)
         arr[0], arr[1] = info['min'], info['max']
-        if not err is None:
+        if err is not None:
             assert_raises(err, calculate_scale, arr, out_dtype, True)
             continue
         slope, inter, mn, mx = calculate_scale(arr, out_dtype, True)

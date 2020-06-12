@@ -61,10 +61,7 @@ class PCANode(mdp.Node):
         super(PCANode, self).__init__(input_dim, output_dim, dtype)
         self.svd = svd
         # set routine for eigenproblem
-        if svd:
-            self._symeig = nongeneral_svd
-        else:
-            self._symeig = symeig
+        self._symeig = nongeneral_svd if svd else symeig
         self.var_abs = var_abs
         self.var_rel = var_rel
         self.var_part = var_part
@@ -88,7 +85,7 @@ class PCANode(mdp.Node):
 
     def _check_output(self, y):
         # check output rank
-        if not y.ndim == 2:
+        if y.ndim != 2:
             error_str = "y has rank %d, should be 2" % (y.ndim)
             raise mdp.NodeException(error_str)
 

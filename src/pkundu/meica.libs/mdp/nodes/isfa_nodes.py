@@ -21,8 +21,7 @@ def _triu(m, k=0):
     M = m.shape[1]
     x = numx.greater_equal(numx.subtract.outer(numx.arange(N),
                                                numx.arange(M)),1-k)
-    out = (1-x)*m
-    return out
+    return (1-x)*m
 
 #############
 class ISFANode(Node):
@@ -168,11 +167,9 @@ class ISFANode(Node):
         elif isinstance(lags, (list, tuple)):
             lags = numx.array(lags, "i")
         elif isinstance(lags, numx.ndarray):
-            if not (lags.dtype.char in ['i', 'l']):
+            if lags.dtype.char not in ['i', 'l']:
                 err_str = "lags must be integer!"
                 raise NodeException(err_str)
-            else:
-                pass
         else:
             err_str = ("Lags must be int, list or array. Found "
                        "%s!" % (type(lags).__name__))
@@ -306,12 +303,11 @@ class ISFANode(Node):
         else:
             ica_str = (fmt['fmt'] % (ica)).rjust(fmt['float'])
         contrast_str = (fmt['fmt'] % (contrast)).rjust(fmt['float'])
-        table_entry = fmt['sep'].join([sweep_str,
+        return fmt['sep'].join([sweep_str,
                                        pert_str,
                                        sfa_str,
                                        ica_str,
                                        contrast_str])
-        return table_entry
 
     def _get_eye(self):
         # return an identity matrix with the right dimensions and type
@@ -388,7 +384,7 @@ class ISFANode(Node):
         npoints = 100
         left = -PI/2 - PI/(npoints+1)
         right = PI/2 + PI/(npoints+1)
-        for iter in (1, 2):
+        for _ in (1, 2):
             phi = numx.linspace(left, right, npoints+3)
             contrast = c22*cos(-2*phi)+s22*sin(-2*phi)+\
                        c24*cos(-4*phi)+s24*sin(-4*phi)
@@ -418,8 +414,13 @@ class ISFANode(Node):
 
         ec = numx.zeros((ncovs, ), dtype = self.dtype)
         for t in range(ncovs):
-            ec[t] = sum([covs[i, j, t]*covs[i, j, t] for i in range(R-1)
-                         for j in range(i+1, R) if i != m and j != m])
+            ec[t] = sum(
+                covs[i, j, t] * covs[i, j, t]
+                for i in range(R - 1)
+                for j in range(i + 1, R)
+                if i != m and j != m
+            )
+
         ec = 2*(ec*icaweights).sum()
         a20 = 0.125*bsfa*(3*d0+d2+3*d4+8*dc)+0.5*bica*(e0+e2+2*ec)
         minimum_contrast = a20+c22*cos(-2*minimum)+s22*sin(-2*minimum)+\
@@ -469,11 +470,7 @@ class ISFANode(Node):
         # In other words we want that: abs(minimum) < pi/4
         phi4 = numx.arctan2(s24, c24)
         # use if-structure until bug in numx.sign is solved
-        if  phi4 >= 0:
-            minimum = -0.25*(phi4-PI)
-        else:
-            minimum = -0.25*(phi4+PI)
-
+        minimum = -0.25*(phi4-PI) if phi4 >= 0 else -0.25*(phi4+PI)
         # compute all constants:
         R = self.output_dim
         dc = numx.zeros((ncovs, ), dtype = self.dtype)
@@ -755,8 +752,12 @@ class ISFANode(Node):
         # adjust b_sfa and b_ica
         self._adjust_ica_sfa_coeff()
         # initialize all possible rotation axes
-        self.rot_axis = [(i, j) for i in range(0, self.output_dim)
-                         for j in range(i+1, self._effective_input_dim)]
+        self.rot_axis = [
+            (i, j)
+            for i in range(self.output_dim)
+            for j in range(i + 1, self._effective_input_dim)
+        ]
+
 
         # initialize the global rotation-permutation matrix (RP):
         RP = self.RP

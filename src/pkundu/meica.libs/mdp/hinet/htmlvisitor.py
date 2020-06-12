@@ -166,7 +166,7 @@ class HiNetHTMLVisitor(object):
     def _write_node_header(self, node, type_id="node"):
         """Write the header content for the node into the HTML file."""
         f = self._file
-        if not (type_id=="flow" or type_id=="flownode"):
+        if not type_id in ["flow", "flownode"]:
             f.write('<tr><td class="dim">in-dim: %s</td></tr>' %
                     str(node.input_dim))
         f.write('<tr><td>')
@@ -181,7 +181,7 @@ class HiNetHTMLVisitor(object):
         f = self._file
         f.write('</table>')
         f.write('</td></tr>')
-        if not (type_id=="flow" or type_id=="flownode"):
+        if not type_id in ["flow", "flownode"]:
             f.write('<tr><td class="dim">out-dim: %s' % str(node.output_dim))
             if self.show_size:
                 f.write('&nbsp;&nbsp;<span class="memorycolor">size: %s</span>'
@@ -247,12 +247,11 @@ def _double_rect2d_switchoard_html(self):
 @mdp.extension_method("html", switchboard.DoubleRhomb2dSwitchboard,
                       "_html_representation")
 def _double_rhomb2d_switchoard_html(self):
-    lines = ['rec. field size: %d' % self.diag_field_channels,
+    return ['rec. field size: %d' % self.diag_field_channels,
              '# of rec. fields (out channels): %d x %d = %d' %
                 (self.out_channels_xy[0], self.out_channels_xy[1],
                  self.output_channels),
              'channel width: %d' % self.in_channel_dim]
-    return lines
 
 @mdp.extension_method("html", mdp.nodes.SFA2Node, "_html_representation")
 def _sfa_html(self):

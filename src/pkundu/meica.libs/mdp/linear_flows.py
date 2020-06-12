@@ -61,10 +61,7 @@ class FlowExceptionCR(CrashRecoveryException, FlowException):
         rec = self.crashing_obj._crash_recovery
         errstr = args[0]
         if rec:
-            if isinstance(rec, str):
-                name = rec
-            else:
-                name = None
+            name = rec if isinstance(rec, str) else None
             name = CrashRecoveryException.dump(self, name)
             dumpinfo = '\nA crash dump is available on: "%s"' % name
             self.filename = name
@@ -657,10 +654,7 @@ class CheckpointSaveFunction(CheckpointFunction):
         self.filename = filename
         self.proto = protocol
         self.stop_training = stop_training
-        if binary or protocol > 0:
-            self.mode = 'wb'
-        else:
-            self.mode = 'w'
+        self.mode = 'wb' if binary or protocol > 0 else 'w'
 
     def __call__(self, node):
         with open(self.filename, self.mode) as fid:

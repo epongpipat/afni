@@ -72,10 +72,7 @@ class Switchboard(mdp.Node):
         return False
 
     def is_invertible(self):
-        if self.inverse_connections is None:
-            return False
-        else:
-            return True
+        return self.inverse_connections is not None
 
     def _inverse(self, x):
         if self.inverse_connections is None:
@@ -542,10 +539,7 @@ class DoubleRhomb2dSwitchboard(ChannelSwitchboard):
         """
         long_in_channels_xy = to_2tuple(long_in_channels_xy)
         self.long_in_channels_xy = long_in_channels_xy
-        if long_in_channels_xy[0] < long_in_channels_xy[1]:
-            started_in_short = 1
-        else:
-            started_in_short = 0
+        started_in_short = 1 if long_in_channels_xy[0] < long_in_channels_xy[1] else 0
         ## check parameters for inconsistencies ##
         if diag_field_channels % 2:
             err = ("diag_field_channels must be even (for double cover)")

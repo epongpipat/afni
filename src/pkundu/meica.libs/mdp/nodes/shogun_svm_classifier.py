@@ -30,10 +30,11 @@ for labels in dir(sgClassifier):
     if is_shogun_classifier(test_classifier):
         default_shogun_classifiers.append(test_classifier)
 
-shogun_classifier_types = {}
-for ct in dir(sgClassifier):
-    if ct.startswith("CT_"):
-        shogun_classifier_types[getattr(sgClassifier, ct)] = ct
+shogun_classifier_types = {
+    getattr(sgClassifier, ct): ct
+    for ct in dir(sgClassifier)
+    if ct.startswith("CT_")
+}
 
 
 class Classifier(object):
@@ -103,7 +104,7 @@ class Classifier(object):
                 msg = "Library '%s' could not be instantiated. Abstract class?" % classifier
                 raise mdp.NodeException(msg)
 
-        if not self._class or not self._instance:
+        if not (self._class and self._instance):
             msg = "The classifier '%s' is not supported." % classifier
             raise mdp.NodeException(msg)
 

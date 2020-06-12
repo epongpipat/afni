@@ -4,7 +4,7 @@ def testAddNode():
     # add_node
     g = graph.Graph()
     nnodes = 5
-    for i in xrange(nnodes):
+    for _ in xrange(nnodes):
         g.add_node()
     assert len(g.nodes)==nnodes, "Wrong number of nodes, expected: %d, got :%d" % (nnodes, len(g.nodes))
     # add nodes

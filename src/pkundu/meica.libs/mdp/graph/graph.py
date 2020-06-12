@@ -288,9 +288,7 @@ class Graph(object):
         visited_nodes = { root: None }
 
         # stack (lifo) list
-        dfs_stack = []
-        dfs_stack.append(root)
-
+        dfs_stack = [root]
         while len(dfs_stack):
             # consider the next node on the stack
             node = dfs_stack.pop()
@@ -363,9 +361,7 @@ class Graph(object):
         visited_nodes = { root: None }
 
         # queue (fifo) list
-        bfs_queue = []
-        bfs_queue.append(root)
-
+        bfs_queue = [root]
         while len(bfs_queue):
             # consider the next node in the queue
             node = bfs_queue.pop(0)

@@ -993,7 +993,7 @@ class RegWrap:
         
    def apply_initial_opts(self, opt_list):
       opt1 = opt_list.find_opt('-version') # user only wants version
-      opt2 = opt_list.find_opt('-ver') 
+      opt2 = opt_list.find_opt('-ver')
       if ((opt1 != None) or (opt2 != None)):
          # ps.version()
          ps.ciao(0)   # terminate 
@@ -1002,7 +1002,7 @@ class RegWrap:
 
       opt = opt_list.find_opt('-save_script') # save executed script
       if opt != None: self.save_script = opt.parlist[0]
-            
+
       opt = opt_list.find_opt('-ex_mode')    # set execute mode
       if opt != None: self.oexec = opt.parlist[0]
 
@@ -1011,7 +1011,7 @@ class RegWrap:
 
       opt = opt_list.find_opt('-prep_only')    # preprocessing only
       if opt != None: self.prep_only = 1
-            
+
       opt = opt_list.find_opt('-help')    # does the user want help?
       if opt != None:
          ps.self_help(2)   # always give full help now by default
@@ -1026,28 +1026,26 @@ class RegWrap:
       if opt != None:
          ps.self_help(1)
          ps.ciao(0)  # terminate
-         
+
       opt = opt_list.find_opt('-perc')    # set and use percentile for weight
       if opt != None: self.perc = float(opt.parlist[0])
-      
-      opt = opt_list.find_opt('-suffix')    
+
+      opt = opt_list.find_opt('-suffix')
       if opt != None: 
-          self.suffix = opt.parlist[0]
-          if((opt=="") or (opt==" ")) :
+         self.suffix = opt.parlist[0]
+         if opt in ["", " "]:
             self.error_msg("Cannot have blank suffix")
             ps.ciao(1);
 
-      opt = opt_list.find_opt('-cost')    
-      if opt != None: self.cost = opt.parlist[0]
-      else: self.cost = ''
-
-      opt = opt_list.find_opt('-pow_mask')    
+      opt = opt_list.find_opt('-cost')
+      self.cost = opt.parlist[0] if opt != None else ''
+      opt = opt_list.find_opt('-pow_mask')
       if opt != None: self.sqmask = opt.parlist[0]
-      
-      opt = opt_list.find_opt('-box_mask')    
+
+      opt = opt_list.find_opt('-box_mask')
       if opt != None: self.boxmask = opt.parlist[0]
-      
-      opt = opt_list.find_opt('-bin_mask')    
+
+      opt = opt_list.find_opt('-bin_mask')
       if opt != None: self.binmask = opt.parlist[0]
 
       if (opt_list.find_opt('-epi2anat') or
@@ -1125,14 +1123,14 @@ class RegWrap:
       if opt != None: 
          self.save_vr = 1
          opt = opt_list.find_opt('-volreg')        # if volreg has not been set
-         if opt == None:  self.volreg_flag = 1     # turn on volreg processing
+         if opt is None:  self.volreg_flag = 1     # turn on volreg processing
       opt = opt_list.find_opt('-save_skullstrip')  # save unaligned skullstripped
       if opt != None: self.save_skullstrip = 1
       # save unaligned, unobliqued dataset
       opt = opt_list.find_opt('-save_orig_skullstrip')
       if opt != None:
          val, err = opt_list.get_string_opt('', opt=opt)
-         if val == None or err:
+         if val is None or err:
             ps.self_help()
             ps.ciao(0)  # terminate
          self.save_origstrip = val
@@ -1158,7 +1156,7 @@ class RegWrap:
    def get_user_opts(self):
       self.valid_opts.check_special_opts(sys.argv) #ZSS March 2014
       self.user_opts = read_options(sys.argv, self.valid_opts)
-      if self.user_opts == None: return 1 #bad
+      if self.user_opts is None: return 1 #bad
       # no options: apply -help
       if ( len(self.user_opts.olist) == 0 or \
            len(sys.argv) <= 1 ) :
@@ -1246,10 +1244,10 @@ class RegWrap:
       opt = self.user_opts.find_opt('-epi')
       if opt == None :
          opt = self.user_opts.find_opt('-dset2')
-      e = afni_name(opt.parlist[0]) 
+      e = afni_name(opt.parlist[0])
       e.to_afni(new_view=dset_view(e.ppve()))
       opt = self.user_opts.find_opt('-anat')
-      if opt == None :
+      if opt is None:
          opt = self.user_opts.find_opt('-dset1')
       a = afni_name(opt.parlist[0])
       a.to_afni(new_view=dset_view(a.ppve()))

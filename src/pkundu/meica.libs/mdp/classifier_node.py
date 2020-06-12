@@ -118,9 +118,7 @@ class ClassifierCumulator(VariadicCumulator('data', 'labels'), ClassifierNode):
         self.data.extend(x.ravel().tolist())
 
         # if labels is a number, all x's belong to the same class
-        if isinstance(labels, (list, tuple, numx.ndarray)):
-            pass
-        else:
+        if not isinstance(labels, (list, tuple, numx.ndarray)):
             labels = [labels] * x.shape[0]
 
         self.labels.extend(labels.ravel().tolist())

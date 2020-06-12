@@ -250,8 +250,7 @@ def testRect2dRouting1():
     assert numx.all(sboard.connections ==
                            numx.array([0, 1, 2, 3, 2, 3, 4, 5, 6, 7,
                                        8, 9, 8, 9, 10, 11]))
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([range(sboard.input_dim), range(101, 101+sboard.input_dim)])
     sboard.execute(x)
     # test generated switchboard
     channel_sboard = sboard.get_out_channel_node(0)
@@ -264,8 +263,7 @@ def testRect2dRouting2():
                                          field_spacing_xy=(1,2))
     assert numx.all(sboard.connections ==
                     numx.array([0, 2, 1, 3, 4, 6, 5, 7]))
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([range(sboard.input_dim), range(101, 101+sboard.input_dim)])
     sboard.execute(x)
     # test generated switchboard
     channel_sboard = sboard.get_out_channel_node(0)
@@ -295,8 +293,7 @@ def testRect2d_get_out_channel_node():
                                          in_channel_dim=2,
                                          field_channels_xy=(3,2),
                                          field_spacing_xy=(1,2))
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([range(sboard.input_dim), range(101, 101+sboard.input_dim)])
     y = sboard.execute(x)
     # routing layer
     nodes = [sboard.get_out_channel_node(index)
@@ -306,33 +303,33 @@ def testRect2d_get_out_channel_node():
     assert (y == layer_y).all()
 
 def test_Rect2d_exception_1():
-    bad_args = dict(in_channels_xy=(12,8),
-                    # 3 is the problematic value:
-                    field_channels_xy=(4,3),
-                    field_spacing_xy=2,
-                    in_channel_dim=3,
-                    ignore_cover=False)
     with py.test.raises(mh.Rectangular2dSwitchboardException):
+        bad_args = dict(in_channels_xy=(12,8),
+                        # 3 is the problematic value:
+                        field_channels_xy=(4,3),
+                        field_spacing_xy=2,
+                        in_channel_dim=3,
+                        ignore_cover=False)
         mh.Rectangular2dSwitchboard(**bad_args)
 
 def test_Rect2d_exception_2():
-    bad_args = dict(in_channels_xy=(12,8),
-                    # 9 is the problematic value:
-                    field_channels_xy=(4,9),
-                    field_spacing_xy=2,
-                    in_channel_dim=3,
-                    ignore_cover=False)
     with py.test.raises(mh.Rectangular2dSwitchboardException):
+        bad_args = dict(in_channels_xy=(12,8),
+                        # 9 is the problematic value:
+                        field_channels_xy=(4,9),
+                        field_spacing_xy=2,
+                        in_channel_dim=3,
+                        ignore_cover=False)
         mh.Rectangular2dSwitchboard(**bad_args)
 
 def test_Rect2d_exception_3():
-    bad_args = dict(in_channels_xy=(12,8),
-                    # 9 is the problematic value:
-                    field_channels_xy=(4,9),
-                    field_spacing_xy=2,
-                    in_channel_dim=3,
-                    ignore_cover=True)
     with py.test.raises(mh.Rectangular2dSwitchboardException):
+        bad_args = dict(in_channels_xy=(12,8),
+                        # 9 is the problematic value:
+                        field_channels_xy=(4,9),
+                        field_spacing_xy=2,
+                        in_channel_dim=3,
+                        ignore_cover=True)
         mh.Rectangular2dSwitchboard(**bad_args)
 
 ## Tests for DoubleRect2dSwitchboard ##
@@ -345,8 +342,7 @@ def test_Rect_double_routing_1():
             numx.array([0,1,4,5, 2,3,6,7, 8,9,12,13, 10,11,14,15,
                         # uneven fields
                         5,6,9,10])).all()
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([range(sboard.input_dim), range(101, 101+sboard.input_dim)])
     sboard.execute(x)
 
 def test_Rect_double_routing_2():
@@ -358,8 +354,7 @@ def test_Rect_double_routing_2():
                         14,15,20,21, 16,17,22,23,
                         # uneven fields
                         7,8,13,14, 9,10,15,16])).all()
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([range(sboard.input_dim), range(101, 101+sboard.input_dim)])
     sboard.execute(x)
 
 def test_Rect_double_routing_3():
@@ -371,8 +366,7 @@ def test_Rect_double_routing_3():
                         16,17,20,21, 18,19,22,23,
                         # uneven fields
                         5,6,9,10, 13,14,17,18])).all()
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([range(sboard.input_dim), range(101, 101+sboard.input_dim)])
     sboard.execute(x)
 
 ## Tests for DoubleRhomb2dSwitchboard ##
@@ -383,8 +377,7 @@ def test_DoubleRhomb_routing_1():
                                          in_channel_dim=1)
     assert (sboard.connections ==
             numx.array([1,6,7,4])).all()
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([range(sboard.input_dim), range(101, 101+sboard.input_dim)])
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_2():
@@ -393,8 +386,7 @@ def test_DoubleRhomd_routing_2():
                                          in_channel_dim=1)
     assert (sboard.connections ==
             numx.array([6,2,3,7])).all()
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([range(sboard.input_dim), range(101, 101+sboard.input_dim)])
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_3():
@@ -403,8 +395,7 @@ def test_DoubleRhomd_routing_3():
                                          in_channel_dim=1)
     assert (sboard.connections ==
             numx.array([1,8,9,5, 2,9,10,6])).all()
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([range(sboard.input_dim), range(101, 101+sboard.input_dim)])
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_4():
@@ -413,8 +404,7 @@ def test_DoubleRhomd_routing_4():
                                          in_channel_dim=1)
     assert (sboard.connections ==
             numx.array([8,2,3,9, 9,4,5,10])).all()
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([range(sboard.input_dim), range(101, 101+sboard.input_dim)])
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_5():
@@ -428,32 +418,28 @@ def test_DoubleRhomd_routing_5():
                         6,20,21,10,
                         9,22,23,13,
                         10,23,24,14])).all()
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([range(sboard.input_dim), range(101, 101+sboard.input_dim)])
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_6():
     sboard = mh.DoubleRhomb2dSwitchboard(long_in_channels_xy=(7,4),
                                          diag_field_channels=4,
                                          in_channel_dim=1)
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([range(sboard.input_dim), range(101, 101+sboard.input_dim)])
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_7():
     sboard = mh.DoubleRhomb2dSwitchboard(long_in_channels_xy=(4,7),
                                          diag_field_channels=4,
                                          in_channel_dim=1)
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([range(sboard.input_dim), range(101, 101+sboard.input_dim)])
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_8():
     sboard = mh.DoubleRhomb2dSwitchboard(long_in_channels_xy=(6,7),
                                          diag_field_channels=4,
                                          in_channel_dim=1)
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([range(sboard.input_dim), range(101, 101+sboard.input_dim)])
     sboard.execute(x)
 
 def test_hinet_simple_net():

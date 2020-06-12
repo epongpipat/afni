@@ -38,7 +38,7 @@ def test_introspection():
 def test_random_rot():
     dim = 20
     tlen = 10
-    for i in xrange(tlen):
+    for _ in xrange(tlen):
         x = utils.random_rot(dim, dtype='f')
         assert x.dtype.char=='f', 'Wrong dtype'
         y = utils.mult(x.T, x)

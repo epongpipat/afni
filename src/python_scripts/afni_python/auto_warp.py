@@ -178,7 +178,7 @@ class RegWrap:
         
    def apply_initial_opts(self, opt_list):
       opt1 = opt_list.find_opt('-version') # user only wants version
-      opt2 = opt_list.find_opt('-ver') 
+      opt2 = opt_list.find_opt('-ver')
       if ((opt1 != None) or (opt2 != None)):
          # ps.version()
          ps.ciao(0)   # terminate 
@@ -187,7 +187,7 @@ class RegWrap:
 
       opt = opt_list.find_opt('-save_script') # save executed script
       if opt != None: self.save_script = opt.parlist[0]
-            
+
       opt = opt_list.find_opt('-ex_mode')    # set execute mode
       if opt != None: self.oexec = opt.parlist[0]
 
@@ -196,7 +196,7 @@ class RegWrap:
 
       opt = opt_list.find_opt('-prep_only')    # preprocessing only
       if opt != None: self.prep_only = 1
-            
+
       opt = opt_list.find_opt('-help')    # does the user want help?
       if opt != None:
          ps.self_help(2)   # always give full help now by default
@@ -211,11 +211,11 @@ class RegWrap:
       if opt != None:
          ps.self_help(1)
          ps.ciao(0)  # terminate
-         
-      opt = opt_list.find_opt('-suffix')    
+
+      opt = opt_list.find_opt('-suffix')
       if opt != None: 
-          self.suffix = opt.parlist[0]
-          if((opt=="") or (opt==" ")) :
+         self.suffix = opt.parlist[0]
+         if opt in ["", " "]:
             self.error_msg("Cannot have blank suffix")
             ps.ciao(1);
 
@@ -223,8 +223,8 @@ class RegWrap:
       vals, rv = opt_list.get_type_list(float, '-qblur', length=2)
       if rv: ps.ciao(1)
       if vals != None: self.qblur = vals
-      
-      
+
+
       vals, rv = opt_list.get_type_list(float, '-qworkhard', length=2)
       if rv: ps.ciao(1)
       if vals != None: 
@@ -232,24 +232,24 @@ class RegWrap:
             self.qworkhard = vals
          else:
             ps.ciao(1)
-         
+
       opt = opt_list.find_opt('-qw_opts')
-      istr = '  '
       if opt != None:
+         istr = '  '
          self.qw_opts = '    %s' % \
           ' '.join(UTIL.quotize_list(opt.parlist, '\\\n%s    '%istr, 1))
-      
-      opt = opt_list.find_opt('-warp_dxyz')    
-      if opt != None: 
+
+      opt = opt_list.find_opt('-warp_dxyz')
+      if opt is None:
+         self.error_msg("This should not happen for pre-defined options");
+         ps.ciao(1)
+
+      else: 
          self.warp_dxyz = float(opt.parlist[0])
          if (self.warp_dxyz != 0.0 and (self.warp_dxyz < 0.01 or self.warp_dxyz > 10.0)):
             self.error_msg("Bad value for -dxyz of %s" % opt.parlist[0]) 
             ps.ciao(1);
-      else:
-         self.error_msg("This should not happen for pre-defined options");
-         ps.ciao(1)
-
-      opt = opt_list.find_opt('-affine_dxyz')    
+      opt = opt_list.find_opt('-affine_dxyz')
       if opt != None: 
          self.affine_dxyz = float(opt.parlist[0])
          if (self.affine_dxyz != 0.0 and (self.affine_dxyz < 0.01 or self.affine_dxyz > 10.0)):
@@ -258,10 +258,10 @@ class RegWrap:
       else:
          self.error_msg("This should not happen for pre-defined options");
          ps.ciao(1)
-   
+
       opt = opt_list.find_opt('-unifize_input')
       self.unifize_input = opt_is_yes(opt)
- 
+
       # any affine transform supplied (defaults to auto_tlrc call)     
       opt = opt_list.find_opt('-affine_input_xmat')
       self.affine_input_xmat = opt.parlist[0]
@@ -270,32 +270,26 @@ class RegWrap:
       opt = opt_list.find_opt('-skip_affine')
       if opt_is_yes(opt):
          self.affine_input_xmat = "ID"
-      
+
       opt = opt_list.find_opt('-followers')
-      if (opt == None):
-         self.followers=[]
-      else:
-         self.followers = []
+      self.followers=[]
+      if opt != None:
          for fol in opt.parlist:
-            self.followers.append(afni_name(fol)) 
+            self.followers.append(afni_name(fol))
       opt = opt_list.find_opt('-affine_followers_xmat')
-      if (opt == None):
-         self.affine_followers_xmat=[]
-      else:
-         self.affine_followers_xmat = opt.parlist
-      
-      if (len(self.followers)):
+      self.affine_followers_xmat = [] if opt is None else opt.parlist
+      if len(self.followers):
          if (len(self.affine_followers_xmat) and \
              len(self.affine_followers_xmat)!=len(self.followers)):
             error_ex("followers and their transforms don't jive")
          if (len(self.affine_followers_xmat)==0):
-            for kk in self.followers:
+            for _ in self.followers:
                self.affine_followers_xmat.append("ID")
       
    #Parse user options            
    def get_user_opts(self):
       self.user_opts = read_options(sys.argv, self.valid_opts)
-      if self.user_opts == None: return 1 #bad
+      if self.user_opts is None: return 1 #bad
       # no options: apply -help
       if ( len(self.user_opts.olist) == 0 or \
            len(sys.argv) <= 1 ) :
@@ -401,12 +395,12 @@ class RegWrap:
                "3dcopy %s %s" \
                % (a.input(), n.input()) , ps.oexec)
          com.run()
-         if (not n.exist() and not ps.dry_run()):
+         if not (n.exist() or ps.dry_run()):
             print("** ERROR: Could not copy dset\n")
             ps.ciao(1)
       else:
          self.exists_msg(n.input())
-      
+
       return n
 
 
@@ -488,19 +482,19 @@ class RegWrap:
 
 
    # find smallest dimension of dataset in x,y,z
-   def min_dim_dset(self, dset=None) :
-       com = shell_com(  \
-                "3dAttribute DELTA %s" % dset.input(), ps.oexec,capture=1)
-       com.run()
-       if  ps.dry_run():
-          return (1.234567)
+   def min_dim_dset(self, dset=None):
+      com = shell_com(  \
+               "3dAttribute DELTA %s" % dset.input(), ps.oexec,capture=1)
+      com.run()
+      if  ps.dry_run():
+         return (1.234567)
 
        # new purty python way (donated by rick)
-       min_dx = min([abs(float(com.val(0,i))) for i in range(3)])
-       
-       if(min_dx==0.0):
-           min_dx = 1.0
-       return (min_dx)
+      min_dx = min(abs(float(com.val(0,i))) for i in range(3))
+
+      if(min_dx==0.0):
+          min_dx = 1.0
+      return (min_dx)
 
         
    # resample EPI data to match higher resolution anatomical data
@@ -513,20 +507,16 @@ class RegWrap:
            (ps.dset2_generic_name, ps.dset1_generic_name ))
 
          if (subbrick == ""):
-             sb = ""
+            sb = ""
          else:
-             if(subbrick.isdigit()): 
-                sb = "[%s]" % subbrick
-             else:
-                sb = "[0]"
-                             
+            sb = "[%s]" % subbrick if subbrick.isdigit() else "[0]"
          com = shell_com(  \
                "3dresample -master %s -prefix %s -inset %s'%s' -rmode Cu" \
                 % (ps.anat_ns.ppv(), o.pp(), e.input(),sb), ps.oexec)
          com.run()
-         if (not o.exist() and not ps.dry_run()):
+         if not (o.exist() or ps.dry_run()):
             print("** ERROR: Could not resample\n")
-            ps.ciao(1)          
+            ps.ciao(1)
       else:
          self.exists_msg(o.pve())
 
@@ -536,7 +526,7 @@ class RegWrap:
    def skullstrip_data(self, e=None, use_ss='3dSkullStrip', \
                        skullstrip_opt="", prefix = "temp_ns"):
       self.info_msg( "removing skull or area outside brain")
-      if (use_ss == '3dSkullStrip'):     #skullstrip epi
+      if (use_ss == '3dSkullStrip'):  #skullstrip epi
          n = afni_name(prefix)
          if (not n.exist() or ps.rewrite or ps.dry_run()):
             n.delete(ps.oexec)
@@ -544,7 +534,7 @@ class RegWrap:
                   "3dSkullStrip -orig_vol %s -input %s -prefix %s" \
                   % (skullstrip_opt, e.input(), n.input()) , ps.oexec)
             com.run()
-            if (not n.exist() and not ps.dry_run()):
+            if not (n.exist() or ps.dry_run()):
                print("** ERROR: Could not strip skull\n")
                ps.ciao(1)
          else:
@@ -560,7 +550,7 @@ class RegWrap:
                   % (   j.pp(), e.input(), e.input(), 
                         j.input(), n.pp()), ps.oexec)
             com.run()
-            if (not n.exist() and not ps.dry_run()):
+            if not (n.exist() or ps.dry_run()):
                print("** ERROR: Could not strip skull with automask\n")
                ps.ciao(1)
             j.delete(ps.oexec)
@@ -579,11 +569,11 @@ class RegWrap:
                "3dUnifize -GM -input %s -prefix %s" \
                % (a.input(), n.input()) , ps.oexec)
          com.run()
-         if (not n.exist() and not ps.dry_run()):
+         if not (n.exist() or ps.dry_run()):
             print("** ERROR: Could not strip skull\n")
             ps.ciao(1)
       else:
-         self.exists_msg(n.input())  
+         self.exists_msg(n.input())
       return n
    
    # prepare input    
@@ -611,7 +601,7 @@ class RegWrap:
 
    def resample(self,a,prefix='resampled', dxyz=0.0, m=None):
       n = afni_name(prefix)
-      if (m == None):
+      if m is None:
          m = a
       if (not n.exist() or ps.rewrite or ps.dry_run()):
          n.delete(ps.oexec)
@@ -628,11 +618,11 @@ class RegWrap:
                   % (   a.input(),  n.input(), 
                         m.input()), ps.oexec)
          com.run()
-         if (not n.exist() and not ps.dry_run()):
+         if not (n.exist() or ps.dry_run()):
             print("** ERROR: Could not strip skull with automask\n")
             ps.ciao(1)
       else:
-         self.exists_msg(n.input())    
+         self.exists_msg(n.input())
       return(n)
    
       
@@ -671,7 +661,7 @@ class RegWrap:
       n = a.new(new_pref="%s%s" % (a.prefix, suf), parse_pref=1)
       if (not n.exist() or ps.rewrite or ps.dry_run()):
          n.delete(ps.oexec)
-         if (xmat==None):
+         if xmat is None:
             com = shell_com(  \
                    "@auto_tlrc -base   %s "      \
                    "          -input  %s "      \
@@ -686,25 +676,25 @@ class RegWrap:
                    % ( xmat, n.input(), a.input() ), \
                      ps.oexec)
          com.run()
-         if (not n.exist() and not ps.dry_run()):
+         if not (n.exist() or ps.dry_run()):
             self.error_msg("Failed in affine step");
             ps.ciao(1)
          xmat = "%s.Xat.1D" % n.prefix
-         if (not os.path.isfile(xmat) and not ps.dry_run()):
+         if not (os.path.isfile(xmat) or ps.dry_run()):
             self.error_msg("Failed to find xmat %s" % xmat);
             ps.ciao(1)
       else:
          self.exists_msg(n.input())
-         if (xmat==None):
+         if xmat is None:
             xmat = "%s.Xat.1D" % n.prefix
-             
+
       return n,xmat
    
    def qwarping(self, a=None, b = None, prefix=None):
       self.info_msg( "Aligning %s data to %s data" % \
            (b.input(), a.input() ))
-      if (prefix==None):
-         prefix = "%s.qw" % a.prefix   
+      if prefix is None:
+         prefix = "%s.qw" % a.prefix
       n = a.new(new_pref=prefix, parse_pref=1)
       if (not n.exist() or ps.rewrite or ps.dry_run()):
          n.delete(ps.oexec)
@@ -720,14 +710,14 @@ class RegWrap:
                     whopt,
                     self.qw_opts, b.input(), a.input()), ps.oexec)
          com.run()
-         if (not n.exist() and not ps.dry_run()):
+         if not (n.exist() or ps.dry_run()):
             self.error_msg("Failed in warping step");
             ps.ciao(1)
       else:
          self.exists_msg(n.input())  
-      
+
       w = n.new(new_pref="%s_WARP" % n.prefix)
-      
+
       return (n,w)
       
    def qwarp_applying(self, a, aff, wrp, prefix=None, dxyz=0.0, master=None):
@@ -779,10 +769,7 @@ class RegWrap:
       affout = "%s_al_post_mat.aff12.1D" % e.prefix
       if (not os.path.isfile(affout) or not n.exist() or ps.rewrite or ps.dry_run()):
          n.delete(ps.oexec)
-         if (aff != "ID"):
-            waff = "-post_matrix %s" % aff
-         else:
-            waff = ""
+         waff = "-post_matrix %s" % aff if (aff != "ID") else ""
          com = shell_com(  \
                 "align_epi_anat.py                              "\
                 "   -epi  %s   -epi_base 3  -epi2anat           "\
@@ -792,7 +779,7 @@ class RegWrap:
                 % ( e.input(), a.input(), waff), \
                 ps.oexec)
          com.run()
-         if (not os.path.isfile(affout) and not ps.dry_run()):
+         if not (os.path.isfile(affout) or ps.dry_run()):
             self.error_msg("Failed in warping step");
             ps.ciao(1)
       else:

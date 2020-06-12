@@ -140,19 +140,16 @@ def parse_field_lines(LL):
 
     for i in range(N):
         x = LL[i]
-        if x:
-            if len(x.strip()) :
-                y = x.split("::")
-                list_group.append(y[0].strip())
-                list_grank.append(y[1].strip())
-                list_prog.append(y[2].strip())
-                list_rank.append(y[3].strip())
-                list_desc.append(y[4].strip())
+        if x and len(x.strip()):
+            y = x.split("::")
+            list_group.append(y[0].strip())
+            list_grank.append(y[1].strip())
+            list_prog.append(y[2].strip())
+            list_rank.append(y[3].strip())
+            list_desc.append(y[4].strip())
 
     lll = [list_group, list_grank, list_prog, list_rank, list_desc]
-    mmm = map(list, zip(*lll))
-
-    return mmm
+    return map(list, zip(*lll))
 
 def write_out_edu_rst(ofile, lll):
     fff = open(ofile, 'w')

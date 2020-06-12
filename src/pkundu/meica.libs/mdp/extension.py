@@ -85,13 +85,13 @@ def extension_method(ext_name, node_cls, method_name=None):
         _method_name = method_name
         if not _method_name:
             _method_name = func.__name__
-        if not ext_name in _extensions:
+        if ext_name not in _extensions:
             err = ("No ExtensionNode base class has been defined for this "
                    "extension.")
             raise ExtensionException(err)
-        if not node_cls in _extensions[ext_name]:
+        if node_cls not in _extensions[ext_name]:
             # register this node
-            _extensions[ext_name][node_cls] = dict()
+            _extensions[ext_name][node_cls] = {}
         _register_attribute(ext_name, node_cls, _method_name, func)
         return func
     return register_function

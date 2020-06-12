@@ -208,10 +208,7 @@ class NetworkPPScheduler(PPScheduler):
         self._secret = secret
         self._slave_nice = nice
         self._timeout = timeout
-        if not source_paths:
-            self._source_paths = []
-        else:
-            self._source_paths = source_paths
+        self._source_paths = [] if not source_paths else source_paths
         if remote_python_executable is None:
             remote_python_executable = sys.executable
         self._python_executable = remote_python_executable
@@ -220,8 +217,11 @@ class NetworkPPScheduler(PPScheduler):
         self.verbose = verbose
         # start ppserver
         self._start_slaves()
-        ppslaves = tuple(["%s:%d" % (address, self._port)
-                          for address in self._running_remote_slaves])
+        ppslaves = tuple(
+            "%s:%d" % (address, self._port)
+            for address in self._running_remote_slaves
+        )
+
         ppserver = pp.Server(ppservers=ppslaves,
                              ncpus=n_local_workers,
                              secret=self._secret)

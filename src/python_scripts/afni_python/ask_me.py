@@ -39,9 +39,7 @@ def ask_me_subj_proc(proc):
 """)
 
     # start by looking for datasets
-    if len(proc.dsets) == 0:
-        if get_datasets(proc): return 1
-
+    if len(proc.dsets) == 0 and get_datasets(proc): return 1
     print('---------- setup block --------------------------------------\n')
     if not proc.user_opts.find_opt('-subj_id'):
         print("----- requesting '-subj_id' option\n")
@@ -117,13 +115,14 @@ def ask_me_subj_proc(proc):
         proc.user_opts.add_opt('-regress_basis', 1, [word],setpar=1)
 
     # get stim_times or stim_files
-    if not proc.user_opts.find_opt('-regress_stim_times') and   \
-       not proc.user_opts.find_opt('-regress_stim_files'):
-        if get_stim_files(proc, word): return 1
-
-    if not proc.user_opts.find_opt('-regress_stim_labels'):
-        if get_stim_labels(proc,type): return 1
-
+    if (
+        not proc.user_opts.find_opt('-regress_stim_times')
+        and not proc.user_opts.find_opt('-regress_stim_files')
+        and get_stim_files(proc, word)
+    ): return 1
+    if not proc.user_opts.find_opt('-regress_stim_labels') and get_stim_labels(
+        proc, type
+    ): return 1
     # apply the new options (and old ones, again)
     if proc.apply_initial_opts(proc.user_opts): return 1
 

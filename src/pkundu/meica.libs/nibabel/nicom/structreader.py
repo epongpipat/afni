@@ -104,9 +104,6 @@ class Unpacker(object):
         s : byte string
         '''
         start = self.ptr
-        if n_bytes == -1:
-            end = len(self.buf)
-        else:
-            end = start + n_bytes
+        end = len(self.buf) if n_bytes == -1 else start + n_bytes
         self.ptr = end
         return self.buf[start:end]

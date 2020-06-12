@@ -43,22 +43,23 @@ def _contrib_get_random_mix():
     return get_random_mix(type='d', mat_dim=(100, 3))[2]
 
 def _train_if_necessary(inp, node, sup_arg_gen):
-    if node.is_trainable():
-        while True:
-            if sup_arg_gen is not None:
-                # for nodes that need supervision
-                node.train(inp, sup_arg_gen(inp))
+    if not node.is_trainable():
+        return
+    while True:
+        if sup_arg_gen is not None:
+            # for nodes that need supervision
+            node.train(inp, sup_arg_gen(inp))
+        else:
+            # support generators
+            if isinstance(inp, Iter):
+                for x in inp:
+                    node.train(x)
             else:
-                # support generators
-                if isinstance(inp, Iter):
-                    for x in inp:
-                        node.train(x)
-                else:
-                    node.train(inp)
-            if node.get_remaining_train_phase() > 1:
-                node.stop_training()
-            else:
-                break
+                node.train(inp)
+        if node.get_remaining_train_phase() > 1:
+            node.stop_training()
+        else:
+            break
 
 def _stop_training_or_execute(node, inp):
     if node.is_trainable():
@@ -269,8 +270,7 @@ def SFA2Node_inp_arg_gen():
     t =  numx.linspace(0, 1, num=1000)
     mat = numx.array([numx.sin(freqs[0]*t),
                       numx.sin(freqs[1]*t)]).T
-    inp = mat.astype('d')
-    return inp
+    return mat.astype('d')
 
 def NeuralGasNode_inp_arg_gen():
     return numx.asarray([[2.,0,0],[-2,0,0],[0,0,0]])

@@ -32,7 +32,7 @@ def change_path_basename(orig, prefix='', suffix='', append=0):
                  --> 'my/dir/toast.pickles.yummy.1D'
     """
     if not orig: return ''
-    if not prefix and not suffix: return orig
+    if not (prefix or suffix): return orig
 
     (head, tail) = os.path.split(orig)
     if append: tail = '%s%s%s' % (prefix, tail, suffix)
@@ -54,12 +54,12 @@ def write_text_to_file(fname, tdata, mode='w', wrap=0, wrapstr='\\\n', exe=0):
        return 0 on success, 1 on error
     """
 
-    if not tdata or not fname:
+    if not (tdata and fname):
         print("** WTTF: missing text or filename")
         return 1
 
     if wrap: tdata = add_line_wrappers(tdata, wrapstr)
-    
+
     if fname == 'stdout':   fp = sys.stdout
     elif fname == 'stderr': fp = sys.stderr
     else:
@@ -71,15 +71,15 @@ def write_text_to_file(fname, tdata, mode='w', wrap=0, wrapstr='\\\n', exe=0):
 
     fp.write(tdata)
 
-    if fname != 'stdout' and fname != 'stderr':
-       fp.close()
-       if exe:
-           try: code = eval('0o755')
-           except: code = eval('0755')
-           try:
-               os.chmod(fname, code)
-           except:
-               print("** failed chmod 755 on %s" % fname)
+    if fname not in ['stdout', 'stderr']:
+        fp.close()
+        if exe:
+            try: code = eval('0o755')
+            except: code = eval('0755')
+            try:
+                os.chmod(fname, code)
+            except:
+                print("** failed chmod 755 on %s" % fname)
 
     return 0
 
@@ -100,27 +100,27 @@ def wrap_file_text(infile='stdin', outfile='stdout'):
    
 
 def read_text_file(fname='stdin', lines=1, strip=1, verb=1):
-   """return the text text from the given file as either one string
+    """return the text text from the given file as either one string
       or as an array of lines"""
 
-   if fname == 'stdin' or fname == '-': fp = sys.stdin
-   else:
-      try: fp = open(fname, 'r')
-      except:
-        if verb: print("** read_text_file: failed to open '%s'" % fname)
-        if lines: return []
-        else:     return ''
+    if fname in ['stdin', '-']: fp = sys.stdin
+    else:
+        try: fp = open(fname, 'r')
+        except:
+          if verb: print("** read_text_file: failed to open '%s'" % fname)
+          if lines: return []
+          else:     return ''
 
-   if lines:
-      tdata = fp.readlines()
-      if strip: tdata = [td.strip() for td in tdata]
-   else:
-      tdata = fp.read()
-      if strip: tdata.strip()
+    if lines:
+       tdata = fp.readlines()
+       if strip: tdata = [td.strip() for td in tdata]
+    else:
+       tdata = fp.read()
+       if strip: tdata.strip()
 
-   fp.close()
+    fp.close()
 
-   return tdata
+    return tdata
 
 def read_top_lines(fname='stdin', nlines=1, strip=0, verb=1):
    """use read_text_file, but return only the first 'nlines' lines"""
@@ -167,24 +167,23 @@ def write_to_timing_file(data, fname='', nplaces=-1, verb=1):
 
 def make_timing_data_string(data, row=-1, nplaces=3, flag_empty=0,
                             mesg='', verb=1):
-   """return a string of row data, to the given number of decimal places
+    """return a string of row data, to the given number of decimal places
       if row is non-negative, return a string for the given row, else
       return a string of all rows"""
 
-   if verb > 2:
-      print('++ make_data_string: row = %d, nplaces = %d, flag_empty = %d' \
-            % (row, nplaces, flag_empty))
+    if verb > 2:
+       print('++ make_data_string: row = %d, nplaces = %d, flag_empty = %d' \
+             % (row, nplaces, flag_empty))
 
-   if row >= 0:
-      return make_single_row_string(data[row], row, nplaces, flag_empty)
+    if row >= 0:
+       return make_single_row_string(data[row], row, nplaces, flag_empty)
 
-   # make it for all rows
-   if len(mesg) > 0: rstr = "%s :\n" % mesg
-   else:             rstr = ''
-   for ind in range(len(data)):
-      rstr += make_single_row_string(data[ind], ind, nplaces, flag_empty)
+       # make it for all rows
+    rstr = "%s :\n" % mesg if len(mesg) > 0 else ''
+    for ind in range(len(data)):
+       rstr += make_single_row_string(data[ind], ind, nplaces, flag_empty)
 
-   return rstr
+    return rstr
 
 def make_single_row_string(data, row, nplaces=3, flag_empty=0):
    """return a string of row data, to the given number of decimal places
@@ -255,9 +254,7 @@ def args_as_command(args, prefix='', suffix=''):
 
     cstr = "%s %s" % (os.path.basename(args[0]),
                             ' '.join(quotize_list(args[1:],'')))
-    fstr = add_line_wrappers('%s%s%s' % (prefix,cstr,suffix))
-
-    return fstr
+    return add_line_wrappers('%s%s%s' % (prefix,cstr,suffix))
 
 def show_args_as_command(args, note='command:'):
      """print the given argument list as a command
@@ -282,9 +279,7 @@ def exec_tcsh_command(cmd, lines=0, noblank=0, showproc=0):
     """
 
     # if showproc, show all output immediately
-    if showproc: capture = 0
-    else:        capture = 1
-
+    capture = 0 if showproc else 1
     # do not re-process .cshrc, as some actually output text
     cstr = 'tcsh -cf "%s"' % cmd
     if showproc:
@@ -292,8 +287,7 @@ def exec_tcsh_command(cmd, lines=0, noblank=0, showproc=0):
        sys.stdout.flush()
     status, so, se = BASE.simple_shell_exec(cstr, capture=capture)
 
-    if not status: otext = so
-    else:          otext = se+so
+    otext = so if not status else se+so
     if lines:
        slines = otext.splitlines()
        if noblank: slines = [line for line in slines if line != '']
@@ -320,14 +314,14 @@ def write_afni_com_history(fname, length=0, wrap=1):
    write_text_to_file(fname, script, wrap=wrap)
 
 def get_process_depth(pid=-1, prog=None, fast=1):
-   """print stack of processes up to init"""
+    """print stack of processes up to init"""
 
-   pstack = get_process_stack(pid=pid, fast=fast)
+    pstack = get_process_stack(pid=pid, fast=fast)
 
-   if prog == None: return len(pstack)
+    if prog is None: return len(pstack)
 
-   pids = [pp[0] for pp in pstack if pp[3] == prog]
-   return len(pids)
+    pids = [pp[0] for pp in pstack if pp[3] == prog]
+    return len(pids)
 
 # get/show_process_stack(), get/show_login_shell()   28 Jun 2013 [rickr]
 def get_process_stack(pid=-1, fast=1, verb=1):
@@ -347,18 +341,17 @@ def get_process_stack(pid=-1, fast=1, verb=1):
       return pind
 
    def get_ancestry_indlist(pids, ppids, plist, pid=-1):
-      """return bad status if index() fails"""
-      if pid >= 0: mypid = pid
-      else:        mypid = os.getpid()
-      pind = get_pid_index(pids, plist, mypid)
-      if pind < 0: return 1, []
-      indtree = [pind]
-      while mypid > 1:
-         mypid = ppids[pind]
-         pind = get_pid_index(pids, plist, mypid)
-         if pind < 0: return 1, []
-         indtree.append(pind)
-      return 0, indtree
+       """return bad status if index() fails"""
+       mypid = pid if pid >= 0 else os.getpid()
+       pind = get_pid_index(pids, plist, mypid)
+       if pind < 0: return 1, []
+       indtree = [pind]
+       while mypid > 1:
+          mypid = ppids[pind]
+          pind = get_pid_index(pids, plist, mypid)
+          if pind < 0: return 1, []
+          indtree.append(pind)
+       return 0, indtree
 
    if not fast:
       stack = get_process_stack_slow(pid=pid)
@@ -449,25 +442,24 @@ def get_process_stack_slow(pid=-1, verb=1):
    return stack
 
 def show_process_stack(pid=-1,fast=1,verb=1):
-   """print stack of processes up to init"""
-   pstack = get_process_stack(pid=pid,fast=fast,verb=verb)
-   if len(pstack) == 0:
-      print('** empty process stack')
-      return
-   ulist = [pp[2] for pp in pstack]
-   ml = max_len_in_list(ulist)
-   header = '   PID   PPID  [USER]'
-   dashes = '  ----   ----  ------'
-   form = '%6s %6s  [%s]'
-   ilen = len(form)+4+ml
+    """print stack of processes up to init"""
+    pstack = get_process_stack(pid=pid,fast=fast,verb=verb)
+    if len(pstack) == 0:
+       print('** empty process stack')
+       return
+    ulist = [pp[2] for pp in pstack]
+    ml = max_len_in_list(ulist)
+    header = '   PID   PPID  [USER]'
+    dashes = '  ----   ----  ------'
+    form = '%6s %6s  [%s]'
+    ilen = len(form)+4+ml
 
-   print('%-*s : %s' % (ilen, header, 'COMMAND'))
-   print('%-*s   %s' % (ilen, dashes, '-------'))
-   for row in pstack:
-      ss = form % (row[0], row[1], row[2])
-      if len(row) > 3: rv = ' '.join(row[3:])
-      else:            rv = row[3]
-      print('%-*s : %s' % (ilen, ss, rv))
+    print('%-*s : %s' % (ilen, header, 'COMMAND'))
+    print('%-*s   %s' % (ilen, dashes, '-------'))
+    for row in pstack:
+        ss = form % (row[0], row[1], row[2])
+        rv = ' '.join(row[3:]) if len(row) > 3 else row[3]
+        print('%-*s : %s' % (ilen, ss, rv))
 
 def get_login_shell():
    """return the apparent login shell
@@ -513,43 +505,42 @@ def get_current_shell():
    return 'SHELL_NOT_DETECTED'
 
 def show_login_shell(verb=0):
-   """print the apparent login shell
+    """print the apparent login shell
 
       from get_process_stack(), search down s[3] until a shell is found
    """
-   shells = ['csh','tcsh','sh','bash','zsh']
-   dshells = ['-%s' % s for s in shells]
+    shells = ['csh','tcsh','sh','bash','zsh']
+    dshells = ['-%s' % s for s in shells]
 
-   pstack = get_process_stack()
-   if len(pstack) == 0:
-      print('** cannot detect shell: empty process stack')
-      return
+    pstack = get_process_stack()
+    if len(pstack) == 0:
+       print('** cannot detect shell: empty process stack')
+       return
 
-   # start from init and work down to find first valid shell
-   shell = ''
-   for pline in pstack:
-      if pline[3] not in shells and pline[3] not in dshells: continue
-      shell = pline[3]
-      if shell[0] == '-': shell = shell[1:]      # strip any leading '-'
-      if verb: print('apparent login shell: %s' % shell)
-      else: print('%s' % shell)
-      break
+    # start from init and work down to find first valid shell
+    shell = ''
+    for pline in pstack:
+       if pline[3] not in shells and pline[3] not in dshells: continue
+       shell = pline[3]
+       if shell[0] == '-': shell = shell[1:]      # strip any leading '-'
+       if verb: print('apparent login shell: %s' % shell)
+       else: print('%s' % shell)
+       break
 
-   if shell == '':
-      if verb:
-         print('** failed to determine login shell, see process stack...\n')
-         show_process_stack()
-         return
+    if shell == '' and verb:
+        print('** failed to determine login shell, see process stack...\n')
+        show_process_stack()
+        return
 
-   # in verbose mode, see if parent shell is different from login
-   if verb:
-      pstack.reverse()
-      for pline in pstack:
-         if pline[3] not in shells and pline[3] not in dshells: continue
-         sh = pline[3]
-         if sh[0] == '-': sh = sh[1:]      # strip any leading '-'
-         if sh != shell: print('differs from current shell: %s' % sh)
-         break
+       # in verbose mode, see if parent shell is different from login
+    if verb:
+        pstack.reverse()
+        for pline in pstack:
+            if not (pline[3] in shells or pline[3] in dshells): continue
+            sh = pline[3]
+            if sh[0] == '-': sh = sh[1:]      # strip any leading '-'
+            if sh != shell: print('differs from current shell: %s' % sh)
+            break
 
 def get_unique_sublist(inlist, keep_order=1):
     """return a copy of inlist, but where elements are unique
@@ -570,10 +561,10 @@ def get_unique_sublist(inlist, keep_order=1):
 
     # if keep_order, be slow
     if keep_order:
-       newlist = []
-       for val in inlist:
-           if not val in newlist: newlist.append(val)
-       return newlist
+        newlist = []
+        for val in inlist:
+            if val not in newlist: newlist.append(val)
+        return newlist
 
     # else, sort only if needed
     if vals_are_sorted(inlist):
@@ -603,10 +594,7 @@ def uniq_list_as_dsets(dsets, byprefix=0, whine=0):
        print('** ULAD: invalid type for dset list, have value %s' % dsets[0])
        return 0
 
-    if byprefix:
-       plist = [an.prefix for an in anlist]
-    else:
-       plist = dsets[:]
+    plist = [an.prefix for an in anlist] if byprefix else dsets[:]
     plist.sort()
 
     # iterate over dsets, searching for matches
@@ -697,7 +685,7 @@ def basis_has_one_reg(basis, st='times'):
     if not basis: return 0
 
     # only 'times', 'file' and 'AM1' are acceptable
-    if not st in stim_types_one_reg: return 0
+    if st not in stim_types_one_reg: return 0
 
     if starts_with_any_str(basis, basis_one_regr_l): return 1
 
@@ -748,11 +736,11 @@ def index_to_run_tr(index, rlens, rstyle=1, whine=1):
 
     # if there is only 1 run and it is short, compute modulo
     rlengths = rlens
-    if len(rlens) == 1 and index >= rlens[0]:
-       rind = index // rlens[0]
-       cind = index % rlens[0]
-       if rstyle: return rind+1, cind
-       else:      return rind, cind
+    if len(rlengths) == 1 and index >= rlengths[0]:
+        rind = index // rlens[0]
+        cind = index % rlens[0]
+        if rstyle: return rind+1, cind
+        else:      return rind, cind
 
     cind = index
     for rind, nt in enumerate(rlengths):
@@ -810,7 +798,7 @@ def get_typed_dset_attr_list(dset, attr, atype, verb=1):
     """
 
     alist = BASE.read_attribute(dset, attr, verb=verb)
-    if alist == None and verb > 0:
+    if alist is None and verb > 0:
         print("** GTDAL: failed to read dset attr %s, dset = %s" % (attr,dset))
         return 1, []
 
@@ -916,28 +904,28 @@ def get_3dinfo_val(dname, val, vtype, verb=1):
    return dval
 
 def get_3dinfo_val_list(dname, val, vtype, verb=1):
-   """run 3dinfo -val, and convert to vtype (also serves as a test)
+    """run 3dinfo -val, and convert to vtype (also serves as a test)
 
       return None on failure, else a list
    """
-   command = '3dinfo -%s %s' % (val, dname)
-   status, output, se = limited_shell_exec(command, nlines=1)
-   if status or len(output) == 0:
-      if verb:
-         print('** 3dinfo -%s failure: message is:\n%s%s\n' % (val, se, output))
-      return None
+    command = '3dinfo -%s %s' % (val, dname)
+    status, output, se = limited_shell_exec(command, nlines=1)
+    if status or len(output) == 0:
+       if verb:
+          print('** 3dinfo -%s failure: message is:\n%s%s\n' % (val, se, output))
+       return None
 
-   output = output[0].strip()
-   if output == 'NO-DSET' :
-      if verb: print('** 3dinfo -%s: no dataset %s' % (val, dname))
-      return None
+    output = output[0].strip()
+    if output == 'NO-DSET' :
+       if verb: print('** 3dinfo -%s: no dataset %s' % (val, dname))
+       return None
 
-   dlist = string_to_type_list(output, vtype)
-   if dlist == None and verb:
-      print("** 3dinfo -%s: cannot get val list from %s, for dset %s" \
-            % (val, output, dname))
+    dlist = string_to_type_list(output, vtype)
+    if dlist is None and verb:
+        print("** 3dinfo -%s: cannot get val list from %s, for dset %s" \
+              % (val, output, dname))
 
-   return dlist
+    return dlist
 
 def dset_view(dname):
    """return the AFNI view for the given dset"""
@@ -947,75 +935,75 @@ def dset_view(dname):
    return output.replace('\n', '')
 
 def get_3d_statpar(dname, vindex, statcode='', verb=0):
-   """return a single stat param at the given sub-brick index
+    """return a single stat param at the given sub-brick index
       if statcode, verify
       return -1 on error
    """
-   ilines = get_3dinfo(dname, lines=1, verb=1)
-   if ilines == None:
-      print('** failed get_3dinfo(%s)' % dname)
-      return -1
+    ilines = get_3dinfo(dname, lines=1, verb=1)
+    if ilines is None:
+        print('** failed get_3dinfo(%s)' % dname)
+        return -1
 
-   N = len(ilines)
+    N = len(ilines)
 
-   # find 'At sub-brick #v' line
-   sstr = 'At sub-brick #%d' % vindex
-   posn = -1
-   for ind, line in enumerate(ilines):
-      posn = line.find(sstr)
-      if posn >= 0: break
+    # find 'At sub-brick #v' line
+    sstr = 'At sub-brick #%d' % vindex
+    posn = -1
+    for ind, line in enumerate(ilines):
+       posn = line.find(sstr)
+       if posn >= 0: break
 
-   if posn < 0:
-      print('** 3d_statpar: no %s[%d]' % (dname, vindex))
-      return -1       # failure
+    if posn < 0:
+       print('** 3d_statpar: no %s[%d]' % (dname, vindex))
+       return -1       # failure
 
-   # check statcode?
-   lind = ind + 1
-   if lind >= N:
-      if verb > 1: print('** 3d_statpar: no space for statpar line')
-      return -1
+    # check statcode?
+    lind = ind + 1
+    if lind >= N:
+       if verb > 1: print('** 3d_statpar: no space for statpar line')
+       return -1
 
-   sline = ilines[lind]
-   plist = sline.split()
-   if statcode: 
-      olist = find_opt_and_params(sline, 'statcode', 2)
-      if len(olist) < 3:
-         print('** 3d_statpar: missing expected statcode')
-         return -1
-      code = olist[2]
-      if code[-1] == ';': code = code[:-1]
-      if code != statcode:
-         print('** 3d_statpar: statcode %s does not match expected %s'\
-               % (code, statcode))
-         return -1
-      if verb > 2: print('-- found %s' % olist)
+    sline = ilines[lind]
+    plist = sline.split()
+    if statcode: 
+       olist = find_opt_and_params(sline, 'statcode', 2)
+       if len(olist) < 3:
+          print('** 3d_statpar: missing expected statcode')
+          return -1
+       code = olist[2]
+       if code[-1] == ';': code = code[:-1]
+       if code != statcode:
+          print('** 3d_statpar: statcode %s does not match expected %s'\
+                % (code, statcode))
+          return -1
+       if verb > 2: print('-- found %s' % olist)
 
-   # now get something like "statpar = 32 x x"
-   olist = find_opt_and_params(sline, 'statpar', 4)
-   if len(olist) < 3:
-      if verb: print('** 3d_statpar: missing expected statpar')
-      if verb > 2: print('   found %s in %s' % (olist, sline))
-      return -1 
-   if verb > 2: print('-- found %s' % olist)
+    # now get something like "statpar = 32 x x"
+    olist = find_opt_and_params(sline, 'statpar', 4)
+    if len(olist) < 3:
+       if verb: print('** 3d_statpar: missing expected statpar')
+       if verb > 2: print('   found %s in %s' % (olist, sline))
+       return -1
+    if verb > 2: print('-- found %s' % olist)
 
-   par = -1
-   try: par = int(olist[2])
-   except:
-      if verb: print('** 3d_statpar: bad stat par[2] in %s' % olist)
-      return -1 
+    par = -1
+    try: par = int(olist[2])
+    except:
+       if verb: print('** 3d_statpar: bad stat par[2] in %s' % olist)
+       return -1 
 
-   return par
+    return par
 
 def find_opt_and_params(text, opt, nopt=0):
-   """given some text, return the option with that text, as well as
+    """given some text, return the option with that text, as well as
       the following 'nopt' parameters (truncated list if not found)"""
-   tlist = text.split()
+    tlist = text.split()
 
-   if not opt in tlist: return []
+    if opt not in tlist: return []
 
-   tind = tlist.index(opt)
+    tind = tlist.index(opt)
 
-   return tlist[tind:tind+1+nopt]
+    return tlist[tind:tind+1+nopt]
 
 def get_truncated_grid_dim(dset, verb=1):
     """return a new (isotropic) grid dimension based on the current grid
@@ -1048,9 +1036,7 @@ def truncate_to_N_bits(val, bits, verb=1, method='trunc'):
 
     # allow any real val
     if val == 0.0: return 0.0
-    if val < 0.0: sign, fval = -1, -float(val)
-    else:         sign, fval =  1,  float(val)
-
+    sign, fval = (-1, -float(val)) if val < 0.0 else (1, float(val))
     if verb > 2: print('T2NB: applying sign=%d, fval=%g' % (sign,fval))
 
     # if r_then_t, start by rounding to 2*bits, then continue to truncate
@@ -1070,10 +1056,9 @@ def truncate_to_N_bits(val, bits, verb=1, method='trunc'):
 
     # then (round or) truncate to an actual integer in that range
     # and divide by 2^m (cannot be r_then_t here)
-    if meth == 'round': ival = round(pm * fval)
-    else:               ival = math.floor(pm * fval)
+    ival = round(pm * fval) if meth == 'round' else math.floor(pm * fval)
     retval = sign*float(ival)/pm
-    
+
     if verb > 2:
         print('-- T2NB: 2^%d <= 2^%d * %g < 2^%d' % (bits-1,m,fval,bits))
         print('         ival = %g, returning %g' % (ival,retval))
@@ -1181,9 +1166,7 @@ def transpose(matrix):
     cols = len(matrix[0])
     newmat = []
     for c in range(cols):
-        newrow = []
-        for r in range(rows):
-            newrow.append(matrix[r][c])
+        newrow = [matrix[r][c] for r in range(rows)]
         newmat.append(newrow)
     return newmat
 
@@ -1216,7 +1199,7 @@ def derivative(vector, in_place=0, direct=0):
     return vec
 
 def make_timing_string(data, nruns, tr, invert=0):
-   """evaluating the data array as boolean (zero or non-zero), return
+    """evaluating the data array as boolean (zero or non-zero), return
       non-zero entries in stim_times format
 
       data      : single vector (length must be multiple of nruns)
@@ -1227,45 +1210,44 @@ def make_timing_string(data, nruns, tr, invert=0):
 
       return err code (0 on success), stim_times string"""
 
-   if not data:
-      print("** make_timing_string: missing data")
-      return 1, ''
-   if not type(data) == type([]):
-      print("** make_timing_string: data is not a list")
-      return 1, ''
+    if not data:
+       print("** make_timing_string: missing data")
+       return 1, ''
+    if type(data) != type([]):
+        print("** make_timing_string: data is not a list")
+        return 1, ''
 
-   nvals = len(data)
-   rlen  = nvals // nruns
+    nvals = len(data)
+    rlen  = nvals // nruns
 
-   if nruns * rlen != nvals:
-      print("** make_timing_str: nruns %d does not divide nvals %d"%(rlen,nvals))
-      return 1, ''
-   if tr <= 0.0:
-      print("** make_timing_string: bad tr = %g" % tr)
-      return 1, ''
+    if nruns * rlen != nvals:
+       print("** make_timing_str: nruns %d does not divide nvals %d"%(rlen,nvals))
+       return 1, ''
+    if tr <= 0.0:
+       print("** make_timing_string: bad tr = %g" % tr)
+       return 1, ''
 
-   rstr = ''
+    rstr = ''
 
-   for run in range(nruns):
-      bot = run*rlen
-      if invert: rvals = [1*(data[i] == 0) for i in range(bot,bot+rlen)]
-      else:      rvals = [1*(data[i] != 0) for i in range(bot,bot+rlen)]
-      # if the run is empty, print 1 or 2 '*'
-      nzero = rvals.count(0)
-      if nzero == rlen:
-         if run == 0: rstr += '* *'
-         else:        rstr += '*'
-      else:
-         rstr += ' '.join(['%g'%(i*tr) for i in range(rlen) if rvals[i]])
+    for run in range(nruns):
+        bot = run*rlen
+        if invert: rvals = [1*(data[i] == 0) for i in range(bot,bot+rlen)]
+        else:      rvals = [1*(data[i] != 0) for i in range(bot,bot+rlen)]
+        # if the run is empty, print 1 or 2 '*'
+        nzero = rvals.count(0)
+        if nzero == rlen:
+            rstr += '* *' if run == 0 else '*'
+        else:
+            rstr += ' '.join(['%g'%(i*tr) for i in range(rlen) if rvals[i]])
 
-      # if run0 and exactly 1 non-zero value, print a trailing '*'
-      if run == 0 and nzero == rlen-1: rstr += ' *'
-      rstr += '\n'
+        # if run0 and exactly 1 non-zero value, print a trailing '*'
+        if run == 0 and nzero == rlen-1: rstr += ' *'
+        rstr += '\n'
 
-   return 0, rstr
+    return 0, rstr
 
 def make_CENSORTR_string(data, nruns=0, rlens=[], invert=0, asopt=0, verb=1):
-   """evaluating the data array as boolean (zero or non-zero), return
+    """evaluating the data array as boolean (zero or non-zero), return
       non-zero entries in CENSORTR format
 
       data      : single vector (length must be multiple of nruns)
@@ -1278,57 +1260,57 @@ def make_CENSORTR_string(data, nruns=0, rlens=[], invert=0, asopt=0, verb=1):
 
       return err code (0 on success), CENSORTR string"""
 
-   if not data:
-      print("** CENSORTR_str: missing data")
-      return 1, ''
-   if not type(data) == type([]):
-      print("** CENSORTR_str: data is not a list")
-      return 1, ''
+    if not data:
+       print("** CENSORTR_str: missing data")
+       return 1, ''
+    if type(data) != type([]):
+        print("** CENSORTR_str: data is not a list")
+        return 1, ''
 
-   nvals = len(data)
+    nvals = len(data)
 
-   # we must have either nruns or a valid rlens list
-   if nruns <= 0 and len(rlens) < 1:
-      print('** make_CENSORTR_string: neither nruns nor rlens')
-      return 1, ''
+    # we must have either nruns or a valid rlens list
+    if nruns <= 0 and len(rlens) < 1:
+       print('** make_CENSORTR_string: neither nruns nor rlens')
+       return 1, ''
 
-   if rlens:
-      rlist = rlens
-      runs  = len(rlist)
-   else:
-      rlist = [(nvals//nruns) for run in range(nruns)]
-      runs  = nruns
+    if rlens:
+       rlist = rlens
+       runs  = len(rlist)
+    else:
+       rlist = [(nvals//nruns) for run in range(nruns)]
+       runs  = nruns
 
-   if verb > 1:
-      print('-- CENSORTR: applying run lengths (%d) : %s' % (runs, rlist))
+    if verb > 1:
+       print('-- CENSORTR: applying run lengths (%d) : %s' % (runs, rlist))
 
-   if loc_sum(rlist) != nvals:
-      print("** CENSORTR_str: sum of run lengths %d != nvals %d" \
-            % (loc_sum(rlist),nvals))
-      return 1, ''
+    if loc_sum(rlist) != nvals:
+       print("** CENSORTR_str: sum of run lengths %d != nvals %d" \
+             % (loc_sum(rlist),nvals))
+       return 1, ''
 
-   rstr = ''
+    rstr = ''
 
-   bot = 0
-   for run in range(runs):
-      rlen = rlist[run]
-      if invert: rvals = [1*(data[i] == 0) for i in range(bot,bot+rlen)]
-      else:      rvals = [1*(data[i] != 0) for i in range(bot,bot+rlen)]
-      bot += rlen  # adjust bottom index for next run
+    bot = 0
+    for run in range(runs):
+       rlen = rlist[run]
+       if invert: rvals = [1*(data[i] == 0) for i in range(bot,bot+rlen)]
+       else:      rvals = [1*(data[i] != 0) for i in range(bot,bot+rlen)]
+       bot += rlen  # adjust bottom index for next run
 
-      # if the run is empty, print 1 or 2 '*'
-      nzero = rvals.count(0)
-      if nzero == rlen: continue
+       # if the run is empty, print 1 or 2 '*'
+       nzero = rvals.count(0)
+       if nzero == rlen: continue
 
-      # make a ',' and '..' string listing TR indices
-      estr = encode_1D_ints([i for i in range(rlen) if rvals[i]])
+       # make a ',' and '..' string listing TR indices
+       estr = encode_1D_ints([i for i in range(rlen) if rvals[i]])
 
-      # every ',' separated piece needs to be preceeded by RUN:
-      rstr += "%d:%s " % (run+1, estr.replace(',', ',%d:'%(run+1)))
+       # every ',' separated piece needs to be preceeded by RUN:
+       rstr += "%d:%s " % (run+1, estr.replace(',', ',%d:'%(run+1)))
 
-   if asopt and rstr != '': rstr = "-CENSORTR %s" % rstr
+    if asopt and rstr != '': rstr = "-CENSORTR %s" % rstr
 
-   return 0, rstr
+    return 0, rstr
 
 
 # end matrix functions
@@ -1355,18 +1337,16 @@ def encode_1D_ints(ilist):
    return text
 
 def consec_len(ilist, start):
-   """return the length of consecutive integers - always at least 1"""
-   prev = ilist[start]
-   length = len(ilist)
-   for ind in range(start+1, length+1):
-      if ind == length: break
-      if ilist[ind] != prev + 1:
-         break
-      prev = ilist[ind]
-   if ind == start:  length = 1
-   else:             length = ind-start
-
-   return length
+    """return the length of consecutive integers - always at least 1"""
+    prev = ilist[start]
+    length = len(ilist)
+    for ind in range(start+1, length+1):
+       if ind == length: break
+       if ilist[ind] != prev + 1:
+          break
+       prev = ilist[ind]
+    length = 1 if ind == start else ind-start
+    return length
 
 def restrict_by_index_lists(dlist, ilist, base=0, nonempty=1, verb=1):
     """restrict elements of dlist by indices in ilist
@@ -1454,26 +1434,25 @@ def decode_1D_ints(istr, verb=1, imax=-1):
             elif s.find('..') >= 0:     # then expect "A..B"
                 pos = s.find('..')
                 if s.find('(', pos) > 0:    # look for "A..B(C)"
-                   [v1, v2] = [n for n in s.split('..')]
-                   v1 = to_int_special(v1, '$', imax)
-                   [v2, step] = v2.split('(')
-                   v2 = to_int_special(v2, '$', imax)
-                   # have start and end values, get step
-                   step, junk = step.split(')')
-                   step = int(step)
-                   if   step > 0: inc = 1
-                   elif step < 0: inc = -1
-                   else:
-                        print("** decode: illegal step of 0 in '%s'" % istr)
-                        return []
-                   ilist.extend([i for i in range(v1, v2+inc, step)])
+                    [v1, v2] = [n for n in s.split('..')]
+                    v1 = to_int_special(v1, '$', imax)
+                    [v2, step] = v2.split('(')
+                    v2 = to_int_special(v2, '$', imax)
+                    # have start and end values, get step
+                    step, junk = step.split(')')
+                    step = int(step)
+                    if   step > 0: inc = 1
+                    elif step < 0: inc = -1
+                    else:
+                         print("** decode: illegal step of 0 in '%s'" % istr)
+                         return []
+                    ilist.extend([i for i in range(v1, v2+inc, step)])
                 else:
-                   [v1, v2] = [n for n in s.split('..')]
-                   v1 = to_int_special(v1, '$', imax)
-                   v2 = to_int_special(v2, '$', imax)
-                   if v1 < v2 : step = 1
-                   else:        step = -1
-                   ilist.extend([i for i in range(v1, v2+step, step)])
+                    [v1, v2] = [n for n in s.split('..')]
+                    v1 = to_int_special(v1, '$', imax)
+                    v2 = to_int_special(v2, '$', imax)
+                    step = 1 if v1 < v2 else -1
+                    ilist.extend([i for i in range(v1, v2+step, step)])
             else:
                 ilist.extend([int(s)])
         except:
@@ -1493,14 +1472,14 @@ def to_int_special(cval, spec, sint):
    else:            return int(cval)
 
 def extract_subbrick_selection(sstring):
-   """search sstring for something like: [DIGITS*($|DIGITS)]
+    """search sstring for something like: [DIGITS*($|DIGITS)]
       - do not consider all DIGITS, '..', ',', '(DIGITS)' pieces,
         just let '*' refer to anything but another '['
    """
-   import re
-   res = re.search('\[\d+[^\[]*]', sstring)
-   if res == None: return ''
-   return res.group(0)
+    import re
+    res = re.search('\[\d+[^\[]*]', sstring)
+    if res is None: return ''
+    return res.group(0)
 
 def strip_list_brackets(istr, verb=1):
    """strip of any [], {}, <> or ## surrounding this string
@@ -1524,29 +1503,28 @@ def strip_list_brackets(istr, verb=1):
    return istr
 
 def replace_n_squeeze(instr, oldstr, newstr):
-   """like string.replace(), but remove all spaces around oldstr
+    """like string.replace(), but remove all spaces around oldstr
       (so probably want some space in newstr)"""
-   # while oldstr is found
-   #   find last preceeding keep posn (before oldstr and spaces)
-   #   find next following keep posn (after oldstr and spaces)
-   #   set result = result[0:first] + newstr + result[last:]
-   newlen = len(newstr)
-   result = instr
-   posn = result.find(oldstr)
-   while posn >= 0:
-      rlen = len(result)
-      start = posn-1
-      while start >= 0 and result[start] == ' ': start -= 1
-      if start >= 0: newres = result[0:start+1] + newstr
-      else:          newres = newstr
-      end = posn + newlen
-      while end < rlen and result[end] == ' ': end += 1
-      if end < rlen: newres += result[end:]
+    # while oldstr is found
+    #   find last preceeding keep posn (before oldstr and spaces)
+    #   find next following keep posn (after oldstr and spaces)
+    #   set result = result[0:first] + newstr + result[last:]
+    newlen = len(newstr)
+    result = instr
+    posn = result.find(oldstr)
+    while posn >= 0:
+        rlen = len(result)
+        start = posn-1
+        while start >= 0 and result[start] == ' ': start -= 1
+        newres = result[0:start+1] + newstr if start >= 0 else newstr
+        end = posn + newlen
+        while end < rlen and result[end] == ' ': end += 1
+        if end < rlen: newres += result[end:]
 
-      result = newres
-      posn = result.find(oldstr)
+        result = newres
+        posn = result.find(oldstr)
 
-   return result
+    return result
 
 # ----------------------------------------------------------------------
 # line wrapper functions
@@ -1563,8 +1541,7 @@ def add_line_wrappers(commands, wrapstr='\\\n', verb=1):
         end = find_command_end(commands, posn)
 
         if not needs_wrapper(commands, 78, posn, end): # command is okay
-            if end < 0: new_cmd = new_cmd + commands[posn:]
-            else      : new_cmd = new_cmd + commands[posn:end+1]
+            new_cmd += commands[posn:] if end < 0 else commands[posn:end+1]
             posn = end+1
             continue
 
@@ -1690,13 +1667,11 @@ def needs_wrapper(command, maxlen=78, start=0, end=-1):
        a string needs wrapping if there are more than 78 characters between
        any previous newline, and the next newline, wrap, or end"""
 
-    if end < 0: end_posn = len(command) - 1
-    else:       end_posn = end
-
+    end_posn = len(command) - 1 if end < 0 else end
     cur_posn = start
     remain = end_posn - cur_posn
     while remain > maxlen:
-        
+
         # find next '\\\n'
         posn = command.find('\\\n', cur_posn)
         if 0 <= posn-cur_posn <= maxlen: # adjust and continue
@@ -1775,11 +1750,9 @@ def find_last_space(istr,start,end,max_len=-1,stretch=1):
        return start-1 if none are found"""
 
     if end < 0: end = len(istr) - 1
-    if max_len >= 0 and end-start >= max_len: index = start+max_len-1
-    else:                                     index = end
-
+    index = start+max_len-1 if max_len >= 0 and end-start >= max_len else end
     posn = index        # store current position in case of stretch
-    
+
     while posn >= start and (istr[posn] == '\n' or not istr[posn].isspace()):
         posn -= 1
 
@@ -1835,17 +1808,17 @@ def vals_are_multiples(num, vals, digits=4):
     return 1
 
 def vals_are_constant(vlist, cval=None):
-   """determine whether every value in vlist is equal to cval
+    """determine whether every value in vlist is equal to cval
       (if cval == None, use vlist[0])"""
 
-   if vlist == None: return 1
-   if len(vlist) < 2: return 1
+    if vlist is None: return 1
+    if len(vlist) < 2: return 1
 
-   if cval == None: cval = vlist[0]
+    if cval is None: cval = vlist[0]
 
-   for val in vlist:
-      if val != cval: return 0
-   return 1
+    for val in vlist:
+       if val != cval: return 0
+    return 1
 
 def vals_are_positive(vlist):
    """determine whether every value in vlist is positive"""
@@ -1854,102 +1827,100 @@ def vals_are_positive(vlist):
    return 1
 
 def vals_are_0_1(vlist):
-   """determine whether every value in vlist is either 0 or 1"""
-   for val in vlist:
-      if val != 0 and val != 1: return 0
-   return 1
+    """determine whether every value in vlist is either 0 or 1"""
+    for val in vlist:
+        if val not in [0, 1]: return 0
+    return 1
 
 def vals_are_sorted(vlist, reverse=0):
-   """determine whether values non-decreasing (or non-inc if reverse)"""
-   if vlist == None: return 1
-   if len(vlist) < 2: return 1
+    """determine whether values non-decreasing (or non-inc if reverse)"""
+    if vlist is None: return 1
+    if len(vlist) < 2: return 1
 
-   rval = 1
-   try:
-      for ind in range(len(vlist)-1):
-         if reverse:
-            if vlist[ind] < vlist[ind+1]:
-               rval = 0
-               break
-         else:
-            if vlist[ind] > vlist[ind+1]:
-               rval = 0
-               break
-   except:
-      print("** failed to detect sorting in list: %s" % vlist)
-      rval = 0
-      
-   return rval
+    rval = 1
+    try:
+       for ind in range(len(vlist)-1):
+          if reverse:
+             if vlist[ind] < vlist[ind+1]:
+                rval = 0
+                break
+          else:
+             if vlist[ind] > vlist[ind+1]:
+                rval = 0
+                break
+    except:
+       print("** failed to detect sorting in list: %s" % vlist)
+       rval = 0
+
+    return rval
 
 def vals_are_increasing(vlist, reverse=0):
-   """determine whether values strictly increasing (or dec if reverse)"""
-   if vlist == None: return 1
-   if len(vlist) < 2: return 1
+    """determine whether values strictly increasing (or dec if reverse)"""
+    if vlist is None: return 1
+    if len(vlist) < 2: return 1
 
-   rval = 1
-   try:
-      for ind in range(len(vlist)-1):
-         if reverse:
-            if vlist[ind] <= vlist[ind+1]:
-               rval = 0
-               break
-         else: # verify increasing
-            if vlist[ind] >= vlist[ind+1]:
-               rval = 0
-               break
-   except:
-      print("** failed to detect sorting in list: %s" % vlist)
-      rval = 0
-      
-   return rval
+    rval = 1
+    try:
+       for ind in range(len(vlist)-1):
+          if reverse:
+             if vlist[ind] <= vlist[ind+1]:
+                rval = 0
+                break
+          else: # verify increasing
+             if vlist[ind] >= vlist[ind+1]:
+                rval = 0
+                break
+    except:
+       print("** failed to detect sorting in list: %s" % vlist)
+       rval = 0
+
+    return rval
 
 def vals_are_unique(vlist, dosort=1):
-   """determine whether (possibly unsorted) values are unique
+    """determine whether (possibly unsorted) values are unique
       - use memory to go for N*log(N) speed"""
 
-   if vlist == None: return 1
-   if len(vlist) < 2: return 1
+    if vlist is None: return 1
+    if len(vlist) < 2: return 1
 
-   # copy and sort
-   dupe = vlist[:]
-   if dosort: dupe.sort()
+    # copy and sort
+    dupe = vlist[:]
+    if dosort: dupe.sort()
 
-   rval = 1
-   try:
-      for ind in range(len(dupe)-1):
-         if dupe[ind] == dupe[ind+1]:
-            rval = 0
-            break
-   except:
-      print("** uniq: failed to compare list elements in %s" % vlist)
-      rval = 0
+    rval = 1
+    try:
+       for ind in range(len(dupe)-1):
+          if dupe[ind] == dupe[ind+1]:
+             rval = 0
+             break
+    except:
+       print("** uniq: failed to compare list elements in %s" % vlist)
+       rval = 0
 
-   del(dupe)
-      
-   return rval
+    del(dupe)
+
+    return rval
 
 def lists_are_same(list1, list2, epsilon=0, doabs=0):
-   """return 1 if the lists have similar values, else 0
+    """return 1 if the lists have similar values, else 0
 
       similar means difference <= epsilon
    """
-   if not list1 and not list2: return 1
-   if not list1: return 0
-   if not list2: return 0
-   if len(list1) != len(list2): return 0
+    if not (list1 or list2): return 1
+    if not list1: return 0
+    if not list2: return 0
+    if len(list1) != len(list2): return 0
 
-   for ind in range(len(list1)):
-      if doabs:
-         v1 = abs(list1[ind])
-         v2 = abs(list2[ind])
-      else:
-         v1 = list1[ind]
-         v2 = list2[ind]
-      if v1 != v2: return 0
-      if epsilon:
-         if abs(v1-v2) > epsilon: return 0
-
-   return 1
+    for ind in range(len(list1)):
+        if doabs:
+           v1 = abs(list1[ind])
+           v2 = abs(list2[ind])
+        else:
+           v1 = list1[ind]
+           v2 = list2[ind]
+        if v1 != v2: return 0
+        if epsilon and abs(v1 - v2) > epsilon: return 0
+    return 1
 
 def string_to_float_list(fstring):
    """return a list of floats, converted from the string
@@ -1987,37 +1958,33 @@ def string_to_type_list(sdata, dtype=float):
    return dlist
 
 def float_list_string(vals, nchar=7, ndec=3, nspaces=2, mesg='', left=0):
-   """return a string to display the floats:
+    """return a string to display the floats:
         vals    : the list of float values
         nchar   : [7] number of characters to display per float
         ndec    : [3] number of decimal places to print to
         nspaces : [2] number of spaces between each float
    """
 
-   if left: form = '%-*.*f%*s'
-   else:    form = '%*.*f%*s'
+    form = '%-*.*f%*s' if left else '%*.*f%*s'
+    istr = mesg
+    for val in vals: istr += form % (nchar, ndec, val, nspaces, '')
 
-   istr = mesg
-   for val in vals: istr += form % (nchar, ndec, val, nspaces, '')
-
-   return istr
+    return istr
 
 def gen_float_list_string(vals, mesg='', nchar=0, left=0):
-   """mesg is printed first, if nchar>0, it is min char width"""
+    """mesg is printed first, if nchar>0, it is min char width"""
 
-   istr = mesg
+    istr = mesg
 
-   if left: form = '%-'
-   else:    form = '%'
+    form = '%-' if left else '%'
+    if nchar > 0:
+       form += '*g '
+       for val in vals: istr += form % (nchar, val)
+    else:
+       form += 'g '
+       for val in vals: istr += form % val
 
-   if nchar > 0:
-      form += '*g '
-      for val in vals: istr += form % (nchar, val)
-   else:
-      form += 'g '
-      for val in vals: istr += form % val
-
-   return istr
+    return istr
 
 def int_list_string(ilist, mesg='', nchar=0, sepstr=' '):
    """like float list string, but use general printing
@@ -2032,71 +1999,65 @@ def int_list_string(ilist, mesg='', nchar=0, sepstr=' '):
    return istr
 
 def invert_int_list(ilist, top=-1, bot=0):
-   """invert the integer list with respect to bot and top
+    """invert the integer list with respect to bot and top
       i.e. return a list of integers from bot to top that are not in
            the passed list
    """
-   if top < bot:
-      print('** invert_int_list requires bot<=top (have %d, %d)' % (bot, top))
-      return []
+    if top < bot:
+       print('** invert_int_list requires bot<=top (have %d, %d)' % (bot, top))
+       return []
 
-   return [ind for ind in range(bot, top+1) if not ind in ilist]
+    return [ind for ind in range(bot, top+1) if ind not in ilist]
 
 def is_valid_int_list(ldata, imin=0, imax=-1, whine=0):
-   """check whether:
+    """check whether:
         o  ldata is a of type []
         o  values are of type int
         o  values are in within imin..imax (only if imin <= imax)
         o  if whine: complain on error
       return 1 on true, 0 on false"""
 
-   if not ldata or type(ldata) != type([]):
-      if whine: print("** not valid as a list: '%s'" % ldata)
-
-   for ind in range(len(ldata)):
-      val = ldata[ind]
-      if type(val) != type(0):
-         if whine: print("** non-int value %d in int list (@ %d)" % (val,ind))
-         return 0
-      if imin <= imax: # then also test bounds
-         if val < imin:
-            if whine: print("** list value %d not in [%d,%d]" %(val,imin,imax))
-            return 0
-         elif val > imax:
-            if whine: print("** list value %d not in [%d,%d]" %(val,imin,imax))
-            return 0
-   return 1
+    if (not ldata or type(ldata) != type([])) and whine: print("** not valid as a list: '%s'" % ldata)
+    for ind in range(len(ldata)):
+       val = ldata[ind]
+       if type(val) != type(0):
+          if whine: print("** non-int value %d in int list (@ %d)" % (val,ind))
+          return 0
+       if imin <= imax: # then also test bounds
+          if val < imin:
+             if whine: print("** list value %d not in [%d,%d]" %(val,imin,imax))
+             return 0
+          elif val > imax:
+             if whine: print("** list value %d not in [%d,%d]" %(val,imin,imax))
+             return 0
+    return 1
 
 def data_to_hex_str(data):
-   """convert raw data to hex string in groups of 4 bytes"""
+    """convert raw data to hex string in groups of 4 bytes"""
 
-   if not data: return ''
+    if not data: return ''
 
-   dlen = len(data)             # total length in bytes
-   groups = (dlen+3) // 4       # number of 4-byte blocks to create
-   remain = dlen
-   retstr = ''  # return string
+    dlen = len(data)             # total length in bytes
+    groups = (dlen+3) // 4       # number of 4-byte blocks to create
+    remain = dlen
+    retstr = ''  # return string
 
-   for group in range(groups):
-      if group > 0: retstr += ' '
-      retstr += '0x'
-      if remain >= 4: llen = 4
-      else:           llen = remain
+    for group in range(groups):
+        if group > 0: retstr += ' '
+        retstr += '0x'
+        llen = min(remain, 4)
+        for ind in range(llen):
+           retstr += '%02x' % data[dlen-remain+ind]
 
-      for ind in range(llen):
-         retstr += '%02x' % data[dlen-remain+ind]
+        remain -= llen
 
-      remain -= llen
-
-   return retstr
+    return retstr
 
 def section_divider(hname='', maxlen=74, hchar='=', endchar=''):
     """return a title string of 'hchar's with the middle chars set to 'hname'
        if endchar is set, put at both ends of header
        e.g. section_divider('volreg', endchar='##') """
-    if len(hname) > 0: name = ' %s ' % hname
-    else:              name = ''
-
+    name = ' %s ' % hname if len(hname) > 0 else ''
     if endchar != '': maxlen -= 2*len(endchar)
     rmlen = len(name)
     if rmlen >= maxlen:
@@ -2123,9 +2084,7 @@ def get_command_str(args=[], preamble=1, comment=1, quotize=1, wrap=1):
                         % section_divider()
     else:        hstr = ''
 
-    if comment: cpre = '# '
-    else:       cpre = ''
-
+    cpre = '# ' if comment else ''
     # note command and args
     cmd = os.path.basename(args[0])
     if quotize: args = ' '.join(quotize_list(args[1:],''))
@@ -2146,7 +2105,7 @@ def max_len_in_list(vlist):
     return mval
 
 def get_rank(data, style='dense', reverse=0, uniq=0):
-   """return the rank order of indices given values,
+    """return the rank order of indices given values,
       i.e. for each value, show its ordered index
       e.g. 3.4 -0.3 4.9 2.0   ==>   2 0 3 1
 
@@ -2163,93 +2122,89 @@ def get_rank(data, style='dense', reverse=0, uniq=0):
       return status (0=success) and the index order
    """
 
-   dlen = len(data)
+    dlen = len(data)
 
-   # maybe reverse the sort order
-   if reverse:
-      maxval = max(data)
-      dd = [maxval-val for val in data]
-   else: dd = data
+    # maybe reverse the sort order
+    if reverse:
+       maxval = max(data)
+       dd = [maxval-val for val in data]
+    else: dd = data
 
-   # sort data and original position
-   dd = [[dd[ind], ind] for ind in range(dlen)]
-   dd.sort()
+    # sort data and original position
+    dd = [[dd[ind], ind] for ind in range(dlen)]
+    dd.sort()
 
-   # invert postion list by repeating above, but with index list as data
-   # (bring original data along for non-uniq case)
-   dd = [[dd[ind][1], ind, dd[ind][0]] for ind in range(dlen)]
+    # invert postion list by repeating above, but with index list as data
+    # (bring original data along for non-uniq case)
+    dd = [[dd[ind][1], ind, dd[ind][0]] for ind in range(dlen)]
 
-   # deal with repeats: maybe modify d[1] from ind, depending on style
-   if not uniq:
-      if style == 'dense':
-         cind = dd[0][1] # must be 0
-         for ind in range(dlen-1):      # compare next to current
-            if dd[ind+1][2] == dd[ind][2]:
-               dd[ind+1][1] = cind
-            else:
-               cind += 1
-               dd[ind+1][1] = cind
-      elif style == 'competition':
-         for ind in range(dlen-1):      # compare next to current
-            if dd[ind+1][2] == dd[ind][2]:
-               dd[ind+1][1] = dd[ind][1]
-      else:
-         print("** UTIL.GR: invalid style '%s'" % style)
-         return 1, []
+       # deal with repeats: maybe modify d[1] from ind, depending on style
+    if not uniq:
+        if style == 'competition':
+            for ind in range(dlen-1):      # compare next to current
+               if dd[ind+1][2] == dd[ind][2]:
+                  dd[ind+1][1] = dd[ind][1]
+        elif style == 'dense':
+            cind = dd[0][1] # must be 0
+            for ind in range(dlen-1):      # compare next to current
+                if dd[ind + 1][2] != dd[ind][2]:
+                    cind += 1
+                dd[ind+1][1] = cind
+        else:
+            print("** UTIL.GR: invalid style '%s'" % style)
+            return 1, []
 
-   dd.sort()
+    dd.sort()
 
-   return 0, [dd[ind][1] for ind in range(dlen)]
+    return 0, [dd[ind][1] for ind in range(dlen)]
 
 # ----------------------------------------------------------------------
 # wildcard construction functions
 # ----------------------------------------------------------------------
 
 def first_last_match_strs(slist):
-   """given a list of strings, return the first and last consistent strings
+    """given a list of strings, return the first and last consistent strings
       (i.e. all strings have the form first*last)
 
         e.g. given ['subj_A1.txt', 'subj_B4.txt', 'subj_A2.txt' ]
              return 'subj_' and '.txt'
    """
 
-   if type(slist) != list:
-      print('** FL match strings requires a list')
-      return '', ''
+    if type(slist) != list:
+       print('** FL match strings requires a list')
+       return '', ''
 
-   if not slist: return '', ''
+    if not slist: return '', ''
 
-   maxlen = len(slist[0])
-   hmatch = maxlen              # let them shrink
-   tmatch = maxlen
-   for sind in range(1, len(slist)):
-      if slist[0] == slist[sind]: continue
+    maxlen = len(slist[0])
+    hmatch = maxlen              # let them shrink
+    tmatch = maxlen
+    for sind in range(1, len(slist)):
+       if slist[0] == slist[sind]: continue
 
-      hmatch = min(hmatch, len(slist[sind]))
-      tmatch = min(tmatch, len(slist[sind]))
+       hmatch = min(hmatch, len(slist[sind]))
+       tmatch = min(tmatch, len(slist[sind]))
 
-      # find first left diff
-      i = 0
-      while i < hmatch:
-         if slist[sind][i] != slist[0][i]: break
-         i += 1
-      hmatch = min(hmatch, i)
+       # find first left diff
+       i = 0
+       while i < hmatch:
+          if slist[sind][i] != slist[0][i]: break
+          i += 1
+       hmatch = min(hmatch, i)
 
-      # find first right diff (index from 1)
-      i = 1
-      while i <= tmatch:
-         if slist[sind][-i] != slist[0][-i]: break
-         i += 1
-      tmatch = min(tmatch, i-1)
+       # find first right diff (index from 1)
+       i = 1
+       while i <= tmatch:
+          if slist[sind][-i] != slist[0][-i]: break
+          i += 1
+       tmatch = min(tmatch, i-1)
 
-   if hmatch+tmatch > maxlen:           # weird, but constructable
-      tmatch = maxlen - hmatch          # so shrink to fit
+    if hmatch+tmatch > maxlen:           # weird, but constructable
+       tmatch = maxlen - hmatch          # so shrink to fit
 
-   # list[-0:] is not empty but is the whole list
-   if tmatch > 0: tstr = slist[0][-tmatch:]
-   else:          tstr = ''
-
-   return slist[0][0:hmatch], tstr
+       # list[-0:] is not empty but is the whole list
+    tstr = slist[0][-tmatch:] if tmatch > 0 else ''
+    return slist[0][0:hmatch], tstr
 
 def glob2stdout(globlist):
    """given a list of glob forms, print all matches to stdout
@@ -2264,7 +2219,7 @@ def glob2stdout(globlist):
          print(fname)
 
 def glob_form_from_list(slist):
-   """given a list of strings, return a glob form
+    """given a list of strings, return a glob form
 
         e.g. given ['subjA1.txt', 'subjB4.txt', 'subjA2.txt' ]
              return 'subj*.txt'
@@ -2272,14 +2227,12 @@ def glob_form_from_list(slist):
       Somewhat opposite list_minus_glob_form().
    """
 
-   if len(slist) == 0: return ''
-   if vals_are_constant(slist): return slist[0]
+    if len(slist) == 0: return ''
+    if vals_are_constant(slist): return slist[0]
 
-   first, last = first_last_match_strs(slist)
-   if not first and not last: return '' # failure
-   globstr = '%s*%s' % (first,last)
-
-   return globstr
+    first, last = first_last_match_strs(slist)
+    if not (first or last): return '' # failure
+    return '%s*%s' % (first,last)
 
 def glob_form_matches_list(slist, ordered=1):
    """given a list of strings, make a glob form, and then test that against
@@ -2319,7 +2272,7 @@ def glob_form_matches_list(slist, ordered=1):
    
 
 def list_minus_glob_form(inlist, hpad=0, tpad=0, keep_dent_pre=0, strip=''):
-   """given a list of strings, return the inner part of the list that varies
+    """given a list of strings, return the inner part of the list that varies
       (i.e. remove the consistent head and tail elements)
 
         e.g. given ['subjA1.txt', 'subjB4.txt', 'subjA2.txt' ]
@@ -2348,65 +2301,60 @@ def list_minus_glob_form(inlist, hpad=0, tpad=0, keep_dent_pre=0, strip=''):
       Somewhat opposite glob_form_from_list().
    """
 
-   if len(inlist) <= 1: return inlist
+    if len(inlist) <= 1: return inlist
 
-   # init with original
-   slist = inlist
+    # init with original
+    slist = inlist
 
-   # maybe make a new list of stripped elements
-   stripnames = ['dir', 'file', 'ext', 'fext']
-   if strip != '' and strip not in stripnames:
-      print('** LMGF: bad strip %s' % strip)
-      strip = ''
+    # maybe make a new list of stripped elements
+    stripnames = ['dir', 'file', 'ext', 'fext']
+    if strip != '' and strip not in stripnames:
+       print('** LMGF: bad strip %s' % strip)
+       strip = ''
 
-   if strip in stripnames:
-      ss = []
-      for inname in inlist:
-         if strip == 'dir':
-            dname, fname = os.path.split(inname)
-            ss.append(fname)
-         elif strip == 'file':
-            dname, fname = os.path.split(inname)
-            ss.append(dname)
-         elif strip == 'ext':
-            fff, ext = os.path.splittext(inname)
-            ss.append(fff)
-         elif strip == 'fext':
-            fff, ext = os.path.splittext(inname)
-            ss.append(fff)
-         else:
-            print('** LMGF: doubly bad strip %s' % strip)
-            break
-      # check for success
-      if len(ss) == len(slist): slist = ss
+    if strip in stripnames:
+        ss = []
+        for inname in slist:
+            if strip == 'dir':
+                dname, fname = os.path.split(inname)
+                ss.append(fname)
+            elif strip == 'file':
+                dname, fname = os.path.split(inname)
+                ss.append(dname)
+            elif strip in ['ext', 'fext']:
+                fff, ext = os.path.splittext(inname)
+                ss.append(fff)
+            else:
+                print('** LMGF: doubly bad strip %s' % strip)
+                break
+        # check for success
+        if len(ss) == len(slist): slist = ss
 
-   if hpad < 0 or tpad < 0:
-      print('** list_minus_glob_form: hpad/tpad must be non-negative')
-      hpad = 0 ; tpad = 0
+    if hpad < 0 or tpad < 0:
+       print('** list_minus_glob_form: hpad/tpad must be non-negative')
+       hpad = 0 ; tpad = 0
 
-   # get head, tail and note lengths
-   head, tail = first_last_match_strs(slist)
-   hlen = len(head)
-   tlen = len(tail)
+    # get head, tail and note lengths
+    head, tail = first_last_match_strs(slist)
+    hlen = len(head)
+    tlen = len(tail)
 
-   # adjust by padding, but do not go negative
-   if hpad >= hlen: hlen = 0
-   else:            hlen -= hpad
-   if tpad >= tlen: tlen = 0
-   else:            tlen -= tpad
+    # adjust by padding, but do not go negative
+    if hpad >= hlen: hlen = 0
+    else:            hlen -= hpad
+    if tpad >= tlen: tlen = 0
+    else:            tlen -= tpad
 
-   # apply directory entry prefix, if requested
-   if keep_dent_pre:
-      s = slist[0]
-      posn = s.rfind('/', 0, hlen)
-      # if found, start at position to right of it
-      # otherwise, use entire prefix
-      if posn >= 0: hlen = posn + 1
-      else:         hlen = 0
-
-   # and return the list of center strings
-   if tlen == 0: return [ s[hlen:]      for s in slist ]
-   else:         return [ s[hlen:-tlen] for s in slist ]
+       # apply directory entry prefix, if requested
+    if keep_dent_pre:
+        s = slist[0]
+        posn = s.rfind('/', 0, hlen)
+              # if found, start at position to right of it
+              # otherwise, use entire prefix
+        hlen = posn + 1 if posn >= 0 else 0
+    # and return the list of center strings
+    if tlen == 0: return [ s[hlen:]      for s in slist ]
+    else:         return [ s[hlen:-tlen] for s in slist ]
 
 def glob_list_minus_pref_suf(pref, suf):
    """just strip the prefix and suffix from string list elements
@@ -2615,13 +2563,11 @@ def glob_form_has_match(form):
    return 0
 
 def executable_dir(ename=''):
-   """return the directory whre the ename program is located
+    """return the directory whre the ename program is located
       (by default, use argv[0])"""
-   if ename == '': ee = sys.argv[0]
-   else:           ee = ename
-
-   dname = os.path.dirname(ee)
-   return os.path.abspath(dname)
+    ee = sys.argv[0] if ename == '' else ename
+    dname = os.path.dirname(ee)
+    return os.path.abspath(dname)
 
 def common_dir(flist):
    """return the directory name that is common to all files (unless trivial)"""
@@ -2633,7 +2579,7 @@ def common_dir(flist):
    return dir
 
 def common_parent_dirs(flists):
-   """return parent directories
+    """return parent directories
 
       flists = lists of file names (each element should be a list)
 
@@ -2645,40 +2591,39 @@ def common_parent_dirs(flists):
 
       if top_dir has at least 2 levels, use it
    """
-   if type(flists) != list:
-      print('** common_parent_dirs: bad flists type')
-      return None
-   for ind in range(len(flists)):
-      flist = flists[ind]
-      if type(flist) != list:
-         print('** common_parent_dirs: bad flist[%d] type' % ind)
-         return None, None, None, None
+    if type(flists) != list:
+       print('** common_parent_dirs: bad flists type')
+       return None
+    for ind in range(len(flists)):
+       flist = flists[ind]
+       if type(flist) != list:
+          print('** common_parent_dirs: bad flist[%d] type' % ind)
+          return None, None, None, None
 
-   # get top_dir and parents
-   all_pars    = []
-   par_dirs    = []
-   short_names = []
-   for flist in flists:
-      # track parent dirs
-      parent = common_dir(flist)
-      if parent == '/' or is_trivial_dir(parent): parent = ''
-      par_dirs.append(parent)
+    # get top_dir and parents
+    all_pars    = []
+    par_dirs    = []
+    short_names = []
+    for flist in flists:
+        # track parent dirs
+        parent = common_dir(flist)
+        if parent == '/' or is_trivial_dir(parent): parent = ''
+        par_dirs.append(parent)
 
-      # and make short names
-      plen = len(parent)
-      if plen > 0: start = plen+1
-      else:        start = 0
-      short_names.append([fname[start:] for fname in flist])
+        # and make short names
+        plen = len(parent)
+        start = plen+1 if plen > 0 else 0
+        short_names.append([fname[start:] for fname in flist])
 
-   # top is common to all parents
-   top_dir = common_dir(par_dirs)
-   if top_dir.count('/') <= 1: top_dir = ''
+    # top is common to all parents
+    top_dir = common_dir(par_dirs)
+    if top_dir.count('/') <= 1: top_dir = ''
 
-   # now get all short dir names, under top dir
-   if top_dir == '': short_dirs = par_dirs
-   else: short_dirs = [child_dir_name(top_dir, pdir) for pdir in par_dirs]
+    # now get all short dir names, under top dir
+    if top_dir == '': short_dirs = par_dirs
+    else: short_dirs = [child_dir_name(top_dir, pdir) for pdir in par_dirs]
 
-   return top_dir, par_dirs, short_dirs, short_names
+    return top_dir, par_dirs, short_dirs, short_names
 
 def child_dir_name(parent, child):
    """return the child directory name truncated under the parent"""
@@ -2693,14 +2638,14 @@ def child_dir_name(parent, child):
    else:               return child[plen+1:]    # remove parent portion
 
 def is_trivial_dir(dname):
-   """input a string
+    """input a string
       return 1 if dname is empty or '.'
       else return 0
    """
-   if dname == None: return 1
-   if dname == '' or dname == '.' or dname == './' : return 1
+    if dname is None: return 1
+    if dname in ['', '.', './']: return 1
 
-   return 0
+    return 0
 
 def flist_to_table_pieces(flist):
    """dissect a file list
@@ -2792,7 +2737,7 @@ def insensitive_glob(pattern):
 
 
 def search_path_dirs(word, mtype=0, casematch=1):
-   """return status and list of matching files
+    """return status and list of matching files
 
       Could be more efficient, esp. with mtype=exact and casematch set, but
       I will strive for simplicity and consistency and see how it goes.
@@ -2803,35 +2748,33 @@ def search_path_dirs(word, mtype=0, casematch=1):
         casematch : flag: if set, case must match
                           else, 'word' letters can be either case
    """
-   try:
-      plist = os.environ['PATH'].split(':')
-   except:
-      print('** search_path_dirs: no PATH var')
-      return 1, []
+    try:
+       plist = os.environ['PATH'].split(':')
+    except:
+       print('** search_path_dirs: no PATH var')
+       return 1, []
 
-   # if no casematch, look for upper/lower pairs
-   if casematch: wpat = word
-   else:         wpat = insensitive_word_pattern(word)
+       # if no casematch, look for upper/lower pairs
+    wpat = word if casematch else insensitive_word_pattern(word)
+    # if not exact, surround with wildcard pattern
+    if   mtype == 0: form = '%s/*%s*'    # any sub-word
+    elif mtype == 1: form = '%s/%s'      # exact match
+    elif mtype == 2: form = '%s/%s*'     # prefix match
+    else:
+       print('** search_path_dirs: illegal mtype = %s' % mtype)
+       return 1, []
 
-   # if not exact, surround with wildcard pattern
-   if   mtype == 0: form = '%s/*%s*'    # any sub-word
-   elif mtype == 1: form = '%s/%s'      # exact match
-   elif mtype == 2: form = '%s/%s*'     # prefix match
-   else:
-      print('** search_path_dirs: illegal mtype = %s' % mtype)
-      return 1, []
+    # now just search for matches
+    rlist = []
+    for pdir in plist:
+       glist = glob.glob(form % (pdir, wpat))
+       glist.sort()
+       if len(glist) > 0: rlist.extend(glist)
 
-   # now just search for matches
-   rlist = []
-   for pdir in plist:
-      glist = glob.glob(form % (pdir, wpat))
-      glist.sort()
-      if len(glist) > 0: rlist.extend(glist)
+    # make a new list based on os.path.realpath, to avoid links
+    rlist = [os.path.realpath(pfile) for pfile in rlist]
 
-   # make a new list based on os.path.realpath, to avoid links
-   rlist = [os.path.realpath(pfile) for pfile in rlist]
-
-   return 0, get_unique_sublist(rlist)
+    return 0, get_unique_sublist(rlist)
 
 def num_found_in_path(word, mtype=0, casematch=1):
    """a simple wrapper to print search_path_dirs results
@@ -2872,19 +2815,16 @@ def show_found_in_path(word, mtype=0, casematch=1, indent='\n   '):
 # ----------------------------------------------------------------------
 
 def loc_sum(vals):
-   """in case 'sum' does not exist, such as on old machines"""
+    """in case 'sum' does not exist, such as on old machines"""
 
-   try: tot = sum(vals)
-   except:
-      tot = 0
-      for val in vals: tot += val
-   return tot
+    try: tot = sum(vals)
+    except:
+        tot = sum(vals)
+    return tot
 
 def sumsq(vals):
-   """return the sum of the squared values"""
-   ssq = 0
-   for val in vals: ssq += (val*val)
-   return ssq
+    """return the sum of the squared values"""
+    return sum((val*val) for val in vals)
 
 def euclidean_norm(vals):
    """name is toooooo long"""
@@ -2943,9 +2883,9 @@ def affine_to_params_6(avec, verb=1):
    return rvec
 
 def maxabs(vals):
-   """convenience function for the maximum of the absolute values"""
-   if len(vals) == 0: return 0
-   return max([abs(v) for v in vals])
+    """convenience function for the maximum of the absolute values"""
+    if len(vals) == 0: return 0
+    return max(abs(v) for v in vals)
 
 def ndigits_lod(num, base=10):
    """return the number of digits to the left of the decimal"""
@@ -3016,19 +2956,19 @@ def demean(vec, ibot=-1, itop=-1):
     return vec
 
 def lin_vec_sum(s1, vec1, s2, vec2):
-   """return s1*[vec1] + s2*[vec2]
+    """return s1*[vec1] + s2*[vec2]
       note: vec2 can be None"""
 
-   if vec2 == None:
-      return [s1*vec1[i] for i in range(len(vec1))]
+    if vec2 is None:
+        return [s1*vec1[i] for i in range(len(vec1))]
 
-   l1 = len(vec1)
-   l2 = len(vec2)
-   if l1 != l2:
-      print('** LVC: vectors have different lengths (%d, %d)' % (l1, l2))
-      return []
+    l1 = len(vec1)
+    l2 = len(vec2)
+    if l1 != l2:
+       print('** LVC: vectors have different lengths (%d, %d)' % (l1, l2))
+       return []
 
-   return [s1*vec1[i]+s2*vec2[i] for i in range(l1)]
+    return [s1*vec1[i]+s2*vec2[i] for i in range(l1)]
 
 def proj_onto_vec(v1, v2, unit_v2=0):
    """return vector v1 projected onto v2

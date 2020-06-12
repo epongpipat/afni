@@ -105,20 +105,16 @@ def analytic_signal(vi, windwidth, percover, win):
     for ii in range(len(bli)):
         v = vi[bli[ii]:ble[ii]+1]
         nv = len(v)
-        if win == 1:
-            fv = fft(v * numpy.hamming(nv))
-        else:
-            fv = fft(v)
+        fv = fft(v * numpy.hamming(nv)) if win == 1 else fft(v)
         wind = zeros(v.size)
         # zero negative frequencies, double positive frequencies
         if nv % 2 == 0:
-            wind[0] = 1  # keep DC
             wind[(nv / 2)] = 1
             wind[1:(nv / 2)] = 2  # double pos. freq
 
         else:
-            wind[0] = 1
             wind[range(1, (nv + 1) / 2)] = 2
+        wind[0] = 1  # keep DC
         h = ifft(fv * wind)
     for i in range(len(h)):
         h[i] /= numpy.complex(num[i])

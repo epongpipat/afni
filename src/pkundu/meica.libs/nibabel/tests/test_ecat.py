@@ -64,7 +64,7 @@ class TestEcatHeader(TestCase):
         hdr = self.header_class()
         hdr2 = hdr.copy()
         assert_true(hdr == hdr2)
-        assert_true(not hdr.binaryblock == hdr2._header_data.byteswap().tostring())
+        assert_true(hdr.binaryblock != hdr2._header_data.byteswap().tostring())
         assert_true(hdr.keys() == hdr2.keys())
 
     def test_update(self):
@@ -184,7 +184,7 @@ class TestEcatSubHeader(TestCase):
         dat = self.subhdr.raw_data_from_fileobj()
         assert_equal(dat.shape, self.subhdr.get_shape())
         scale_factor = self.subhdr.subheaders[0]['scale_factor']
-        assert_equal(self.subhdr.subheaders[0]['scale_factor'].item(),1.0)
+        assert_equal(scale_factor.item(), 1.0)
         ecat_calib_factor = self.hdr['ecat_calibration_factor']
         assert_equal(ecat_calib_factor, 25007614.0)
 
@@ -200,8 +200,8 @@ class TestEcatImage(TestCase):
                      self.example_file)
 
     def test_save(self):
-        tmp_file = 'tinypet_tmp.v'
         with InTemporaryDirectory():
+            tmp_file = 'tinypet_tmp.v'
             self.img.to_filename(tmp_file)
             other = self.image_class.load(tmp_file)
             assert_equal(self.img.get_data().all(), other.get_data().all())

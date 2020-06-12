@@ -68,7 +68,7 @@ class MyWrapStruct(WrapStruct):
                 klass._chk_string)
 
     def get_value_label(self, fieldname):
-        if not fieldname in self._field_recoders:
+        if fieldname not in self._field_recoders:
             raise ValueError('%s not a coded field' % fieldname)
         code = int(self._structarr[fieldname])
         return self._field_recoders[fieldname].label[code]

@@ -8,6 +8,7 @@
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 ''' Testing for orientations module '''
 
+
 import numpy as np
 
 from nose.tools import assert_true, assert_equal, assert_raises
@@ -57,12 +58,28 @@ OUT_ORNTS = [[[0,1],
               [2,1]],
             ]
 
-IN_ARRS = IN_ARRS + [[[np.cos(np.pi/6+i*np.pi/2),np.sin(np.pi/6+i*np.pi/2),0,0], 
-                      [-np.sin(np.pi/6+i*np.pi/2),np.cos(np.pi/6+i*np.pi/2),0,0],
-                      [0,0,1,0],
-                      [0,0,0,1]] for i in range(4)]
+IN_ARRS += [
+    [
+        [
+            np.cos(np.pi / 6 + i * np.pi / 2),
+            np.sin(np.pi / 6 + i * np.pi / 2),
+            0,
+            0,
+        ],
+        [
+            -np.sin(np.pi / 6 + i * np.pi / 2),
+            np.cos(np.pi / 6 + i * np.pi / 2),
+            0,
+            0,
+        ],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
+    ]
+    for i in range(4)
+]
 
-OUT_ORNTS = OUT_ORNTS + [[[0,1],
+
+OUT_ORNTS += [[[0,1],
                           [1,1],
                           [2,1]],
                          [[1,-1],

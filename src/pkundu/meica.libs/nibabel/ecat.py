@@ -263,7 +263,7 @@ class EcatHeader(object):
     def _guess_endian(self, hdr):
         """Guess endian from MAGIC NUMBER value of header data
         """
-        if not hdr['sw_version'] == 74:
+        if hdr['sw_version'] != 74:
             return swapped_code
         else:
             return native_code
@@ -299,7 +299,7 @@ class EcatHeader(object):
         """Return header data for empty header with given endianness"""
         #hdr_data = super(EcatHeader, self)._empty_headerdata(endianness)
         dt = self._dtype
-        if not endianness is None:
+        if endianness is not None:
             dt = dt.newbyteorder(endianness)
         hdr_data = np.zeros((), dtype=dt)
         hdr_data['magic_number'] = 'MATRIX72'
@@ -423,7 +423,7 @@ class EcatMlist(object):
         dat=fileobj.read(128*32)
 
         dt = np.dtype([('matlist',np.int32)])
-        if not self.hdr.endianness is native_code:
+        if self.hdr.endianness is not native_code:
             dt = dt.newbyteorder(self.hdr.endianness)
         nframes = self.hdr['num_frames']
         mlist = np.zeros((nframes,4), dtype='uint32')
@@ -433,14 +433,14 @@ class EcatMlist(object):
         while not done: #mats['matlist'][0,1] == 2:
 
             mats = np.recarray(shape=(32,4), dtype=dt,  buf=dat)
-            if not (mats['matlist'][0,0] +  mats['matlist'][0,3]) == 31:
+            if mats['matlist'][0, 0] + mats['matlist'][0, 3] != 31:
                 mlist = []
                 return mlist
 
             nrecords = mats['matlist'][0,3]
             mlist[record_count:nrecords+record_count,:] = mats['matlist'][1:nrecords+1,:]
             record_count+= nrecords
-            if mats['matlist'][0,1] == 2 or mats['matlist'][0,1] == 0:
+            if mats['matlist'][0, 1] in [2, 0]:
                 done = True
             else:
                 # Find next subheader
@@ -569,9 +569,9 @@ class EcatSubHeader(object):
         header = self._header
         endianness = self.endianness
         dt = self._subhdrdtype
-        if not self.endianness is native_code:
+        if endianness is not native_code:
             dt = self._subhdrdtype.newbyteorder(self.endianness)
-        if self._header['num_frames'] > 1:
+        if header['num_frames'] > 1:
             for item in self._mlist._mlist:
                 if item[1] == 0:
                     break
@@ -693,7 +693,7 @@ class EcatSubHeader(object):
         .. seealso:: data_from_fileobj
         '''
         dtype = self._get_data_dtype(frame)
-        if not self._header.endianness is native_code:
+        if self._header.endianness is not native_code:
             dtype=dtype.newbyteorder(self._header.endianness)
         shape = self.get_shape(frame)
         offset = self._get_frame_offset(frame)
@@ -806,12 +806,12 @@ class EcatImage(SpatialImage):
         self._subheader = subheader
         self._mlist = mlist
         self._data = data
-        if not affine is None:
+        if affine is not None:
             # Check that affine is array-like 4,4.  Maybe this is too strict at
             # this abstract level, but so far I think all image formats we know
             # do need 4,4.
             affine = np.asarray(affine)
-            if not affine.shape == (4,4):
+            if affine.shape != (4, 4):
                 raise ValueError('Affine should be shape 4,4')
         self._affine = affine
         if extra is None:
@@ -854,8 +854,7 @@ class EcatImage(SpatialImage):
 
     def get_data_dtype(self,frame):
         subhdr = self._subheader
-        dt = subhdr._get_data_dtype(frame)
-        return dt
+        return subhdr._get_data_dtype(frame)
 
     @property
     def shape(self):
@@ -912,8 +911,9 @@ class EcatImage(SpatialImage):
             warnings.warn('Affines different across frames, loading affine from FIRST frame',
                           UserWarning )
         aff = subheaders.get_frame_affine()
-        img = klass(data, aff, header, subheaders, mlist, extra=None, file_map = file_map)
-        return img
+        return klass(
+            data, aff, header, subheaders, mlist, extra=None, file_map=file_map
+        )
 
     def _get_empty_dir(self):
         '''

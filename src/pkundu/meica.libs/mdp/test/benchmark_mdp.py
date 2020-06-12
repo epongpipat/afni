@@ -67,7 +67,7 @@ def quadratic_expansion_benchmark(dim, len, times):
     Arguments: (dim,len,times)."""
     a = numx_rand.random((len,dim))
     qnode = mdp.nodes.QuadraticExpansionNode()
-    for i in xrange(times):
+    for _ in xrange(times):
         qnode(a)
 
 def polynomial_expansion_benchmark(dim, len, degree, times):
@@ -77,7 +77,7 @@ def polynomial_expansion_benchmark(dim, len, degree, times):
     numx_rand.seed(4253529)
     a = numx_rand.random((len,dim))
     pnode = mdp.nodes.PolynomialExpansionNode(degree)
-    for i in xrange(times):
+    for _ in xrange(times):
         pnode(a)
 
 # ISFA benchmark

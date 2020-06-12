@@ -52,10 +52,7 @@ class FlowNode(mdp.Node):
             if node.is_trainable():
                 train_len += (len(node._get_train_seq())
                               - self._pretrained_phase[i_node])
-        if train_len:
-            self._is_trainable = True
-        else:
-            self._is_trainable = False
+        self._is_trainable = True if train_len else False
         # remaining standard node initialisation
         super(FlowNode, self).__init__(input_dim=input_dim,
                                        output_dim=output_dim, dtype=dtype)

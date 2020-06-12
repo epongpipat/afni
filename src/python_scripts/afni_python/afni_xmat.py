@@ -476,7 +476,7 @@ class AfniXmat:
     def make_show_str(self):
         if not self.ready: return "++ mat       : <unset>"
 
-        mstr = "++ mat.shape : %s\n" \
+        return "++ mat.shape : %s\n" \
                "++ fname     : %s\n" \
                "++ rows      : %d\n" \
                "++ cols      : %d\n" \
@@ -487,8 +487,6 @@ class AfniXmat:
                "++ nrowfull  : %d\n" % \
                (str([self.mat.shape]), self.fname, self.nrows, self.ncols,
                 self.labels, self.groups, self.goodlist, self.tr, self.nrowfull)
-
-        return mstr
 
     def show_conds(self):
         print self.make_show_conds_str()
@@ -512,7 +510,7 @@ class AfniXmat:
         else:
             extra_str = ''
 
-        mesg = 'Condition Numbers:\n\n'              \
+        return 'Condition Numbers:\n\n'              \
                '    all regressors      : %.1f\n\n'  \
                '%s'                                  \
                '    main regressors     : %.1f\n'    \
@@ -529,8 +527,6 @@ class AfniXmat:
                   self.cond_num_by_cols(self.cols_by_group_list([-1,0])),
                   self.cond_num_by_cols(self.cols_by_group_list([-1])),
                   self.cond_num_by_cols(self.cols_by_group_list([0])))
-
-        return mesg
 
     def cond_num_by_cols(self, cols):
         """given a column list, return the matrix condition number"""
@@ -616,7 +612,7 @@ class AfniXmat:
         
     def cols_by_label_list(self, labels):
         """return a list of columns, given a list of labels"""
-        if not self.labels or not labels: return []
+        if not (self.labels and labels): return []
         if not list2_is_in_list1(self.labels, labels, "labels"): return []
         return [self.labels.index(lab) for lab in labels]
 

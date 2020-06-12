@@ -458,7 +458,7 @@ class Node(object):
     ### check functions
     def _check_input(self, x):
         # check input rank
-        if not x.ndim == 2:
+        if x.ndim != 2:
             error_str = "x has rank %d, should be 2" % (x.ndim)
             raise NodeException(error_str)
 
@@ -471,7 +471,7 @@ class Node(object):
             self.dtype = x.dtype
 
         # check the input dimension
-        if not x.shape[1] == self.input_dim:
+        if x.shape[1] != self.input_dim:
             error_str = "x has dimension %d, should be %d" % (x.shape[1],
                                                               self.input_dim)
             raise NodeException(error_str)
@@ -482,12 +482,12 @@ class Node(object):
 
     def _check_output(self, y):
         # check output rank
-        if not y.ndim == 2:
+        if y.ndim != 2:
             error_str = "y has rank %d, should be 2" % (y.ndim)
             raise NodeException(error_str)
 
         # check the output dimension
-        if not y.shape[1] == self.output_dim:
+        if y.shape[1] != self.output_dim:
             error_str = "y has dimension %d, should be %d" % (y.shape[1],
                                                               self.output_dim)
             raise NodeException(error_str)
@@ -686,10 +686,7 @@ class Node(object):
         name = type(self).__name__
         inp = "input_dim=%s" % str(self.input_dim)
         out = "output_dim=%s" % str(self.output_dim)
-        if self.dtype is None:
-            typ = 'dtype=None'
-        else:
-            typ = "dtype='%s'" % self.dtype.name
+        typ = 'dtype=None' if self.dtype is None else "dtype='%s'" % self.dtype.name
         args = ', '.join((inp, out, typ))
         return name + '(' + args + ')'
 

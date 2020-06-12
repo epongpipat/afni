@@ -151,7 +151,7 @@ def write_out_edu_rst(ofile, lll, relpath=""):
         my_brain1 = "media/cbars/IMGS/tt_cbar_"+my_name+".axi.png"
         my_brain2 = "media/cbars/IMGS_MULTI/mm_cbar_"+my_name+".axi.png"
 
-        fff.write("   * - %s\n" % (x[:-4]))
+        fff.write("   * - %s\n" % my_name)
         fff.write("     - .. image:: %s\n" % (my_cbar))
         fff.write("          :height: 3in\n")
         fff.write("          :align: center\n")

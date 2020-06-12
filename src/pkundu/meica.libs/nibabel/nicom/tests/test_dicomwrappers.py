@@ -1,6 +1,7 @@
 """ Testing DICOM wrappers
 """
 
+
 from os.path import join as pjoin, dirname
 import gzip
 
@@ -25,10 +26,7 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 IO_DATA_PATH = pjoin(dirname(__file__), 'data')
 DATA_FILE = pjoin(IO_DATA_PATH, 'siemens_dwi_1000.dcm.gz')
-if have_dicom:
-    DATA = dicom.read_file(gzip.open(DATA_FILE))
-else:
-    DATA = None
+DATA = dicom.read_file(gzip.open(DATA_FILE)) if have_dicom else None
 DATA_FILE_B0 = pjoin(IO_DATA_PATH, 'siemens_dwi_0.dcm.gz')
 DATA_FILE_SLC_NORM = pjoin(IO_DATA_PATH, 'csa_slice_norm.dcm')
 
@@ -74,7 +72,7 @@ def test_wrappers():
         assert_equal(dw.get('InstanceNumber'), 2)
         assert_equal(dw.get('AcquisitionNumber'), 2)
         assert_raises(KeyError, dw.__getitem__, 'not an item')
-    for maker in (didw.MosaicWrapper, didw.wrapper_from_data):
+    for _ in (didw.MosaicWrapper, didw.wrapper_from_data):
         assert_true(dw.is_mosaic)
 
 

@@ -87,10 +87,7 @@ class LinearRegressionNode(Node):
         """
         # initialize internal vars if necessary
         if self._xTx is None:
-            if self.with_bias:
-                x_size = self._input_dim + 1
-            else:
-                x_size = self._input_dim
+            x_size = self._input_dim + 1 if self.with_bias else self._input_dim
             self._xTx = numx.zeros((x_size, x_size), self._dtype)
             self._xTy = numx.zeros((x_size, self._output_dim), self._dtype)
 
